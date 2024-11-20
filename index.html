@@ -4,40 +4,47 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Klasopstelling Generator</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>Klasopstelling Generator</h1>
+            <h1>Boerhaave Klasopstelling Generator</h1>
             <button id="darkModeToggle" class="theme-toggle" aria-label="Schakel tussen licht en donker thema">
                 🌓
             </button>
         </header>
 
         <main>
-            <section class="list-management">
-                <h2>Lijstbeheer</h2>
-                <div class="list-controls">
-                    <select id="listSelect" class="list-select" aria-label="Selecteer een opgeslagen lijst">
-                        <option value="">-- Selecteer een lijst --</option>
-                    </select>
-                    <button id="loadListBtn" class="button button-secondary" disabled>
-                        Laad Lijst
-                    </button>
-                    <button id="deleteListBtn" class="button button-danger" disabled>
-                        Verwijder Lijst
+            <section class="list-management collapsed">
+                <div class="list-management-header">
+                    <h2>Lijstbeheer</h2>
+                    <button class="collapse-toggle" aria-label="Toon/verberg lijstbeheer">
+                        <span class="arrow">▼</span>
                     </button>
                 </div>
-                <div class="save-list-form">
-                    <input type="text" id="listName" placeholder="Geef deze lijst een naam" 
-                           aria-label="Naam voor nieuwe lijst">
-                    <button id="saveListBtn" class="button button-primary">
-                        Sla Lijst Op
-                    </button>
+                <div class="list-management-content">
+                    <div class="list-controls">
+                        <select id="listSelect" class="list-select" aria-label="Selecteer een opgeslagen lijst">
+                            <option value="">-- Selecteer een lijst --</option>
+                        </select>
+                        <button id="loadListBtn" class="button button-secondary" disabled>
+                            Laad Lijst
+                        </button>
+                        <button id="deleteListBtn" class="button button-danger" disabled>
+                            Verwijder Lijst
+                        </button>
+                    </div>
+                    <div class="save-list-form">
+                        <input type="text" id="listName" placeholder="Geef deze lijst een naam" 
+                               aria-label="Naam voor nieuwe lijst">
+                        <button id="saveListBtn" class="button button-primary">
+                            Sla Lijst Op
+                        </button>
+                    </div>
                 </div>
             </section>
-
-            <section class="form-group" id="studentInput">
+<section class="form-group" id="studentInput">
                 <label for="studentNames">Voer de namen van de leerlingen in (één naam per regel):</label>
                 <textarea 
                     id="studentNames" 
@@ -75,13 +82,14 @@
                     Opslaan
                 </button>
                 <button 
-                    id="printBtn" 
+                    id="screenshotBtn" 
                     class="button button-secondary"
-                    aria-label="Print huidige opstellingen">
-                    Print
+                    aria-label="Download plattegrond als afbeelding">
+                    Download Plattegrond
                 </button>
             </section>
-<section class="layouts">
+
+            <section class="layouts">
                 <div class="tabs">
                     <ul class="tab-list" role="tablist">
                         <li role="presentation">
@@ -104,8 +112,7 @@
                         </li>
                     </ul>
                 </div>
-
-                <div id="content222" class="tab-content layout-container active" role="tabpanel" aria-labelledby="tab222">
+<div id="content222" class="tab-content layout-container active" role="tabpanel" aria-labelledby="tab222">
                     <h3>2-2-2 Opstelling</h3>
                     <div id="seatingPlan222" class="seating-plan" aria-label="2-2-2 klasopstelling"></div>
                 </div>
@@ -138,8 +145,9 @@
             <button class="button button-danger remove-fixed" aria-label="Verwijder deze vaste plaats">X</button>
         </div>
     </template>
+
 <style>
-    /* CSS Reset en Variabelen */
+/* CSS Reset en Variabelen */
     :root {
         /* Kleurenschema - Light Mode */
         --bg-color: #ffffff;
@@ -169,7 +177,8 @@
         /* Transitions */
         --transition-speed: 0.3s;
     }
-/* Dark Mode Variabelen */
+
+    /* Dark Mode Variabelen */
     .dark-mode {
         --bg-color: #15202b;
         --text-color: #ffffff;
@@ -240,8 +249,7 @@
         background-color: var(--button-bg);
         border-radius: var(--border-radius-sm);
     }
-
-    /* Styles voor lijstbeheer */
+/* Styles voor lijstbeheer */
     .list-management {
         margin-bottom: var(--spacing-xl);
         padding: var(--spacing-md);
@@ -249,14 +257,46 @@
         border-radius: var(--border-radius-md);
         background-color: rgba(255, 255, 255, 0.9);
         backdrop-filter: blur(4px);
+        transition: all var(--transition-speed);
+    }
+
+    .list-management-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        cursor: pointer;
+        padding: var(--spacing-sm);
+    }
+
+    .collapse-toggle {
+        background: none;
+        border: none;
+        color: var(--text-color);
+        cursor: pointer;
+        padding: var(--spacing-sm);
+    }
+
+    .collapse-toggle .arrow {
+        display: inline-block;
+        transition: transform var(--transition-speed);
+    }
+
+    .list-management.collapsed .collapse-toggle .arrow {
+        transform: rotate(-90deg);
+    }
+
+    .list-management-content {
+        max-height: 500px;
+        overflow: hidden;
+        transition: max-height var(--transition-speed);
+    }
+
+    .list-management.collapsed .list-management-content {
+        max-height: 0;
     }
 
     .dark-mode .list-management {
         background-color: rgba(26, 26, 26, 0.9);
-    }
-
-    .list-management h2 {
-        margin-bottom: var(--spacing-md);
     }
 
     .list-controls {
@@ -291,7 +331,8 @@
         background-color: var(--seat-bg);
         color: var(--text-color);
     }
-/* Button Styles */
+
+    /* Button Styles */
     .button {
         display: inline-flex;
         align-items: center;
@@ -335,24 +376,27 @@
     .button-primary {
         background-color: var(--button-bg);
         color: var(--button-text);
-		    font-weight: 600;
-    padding: var(--spacing-md) var(--spacing-xl); /* Meer padding */
+        font-weight: 600;
+        padding: var(--spacing-md) var(--spacing-xl);
     }
 
     .button-primary:hover:not(:disabled) {
         background-color: var(--button-hover);
         transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
     }
 
     .button-secondary {
         background-color: var(--seat-bg);
         color: var(--text-color);
         border: 1px solid var(--seat-border);
-		    font-weight: 500;
+        font-weight: 500;
     }
 
     .button-secondary:hover:not(:disabled) {
         background-color: var(--group-bg);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
     }
 
     .button-danger {
@@ -362,6 +406,8 @@
 
     .button-danger:hover:not(:disabled) {
         background-color: #cc0000;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
     }
 
     /* Form Elements */
@@ -386,14 +432,13 @@
         border-color: var(--button-bg);
         box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
     }
-
-    /* Tab Styling */
+/* Tab Styling */
     .tabs {
-    margin-bottom: var(--spacing-lg);
-    border-bottom: 1px solid var(--seat-border);
-    background-color: var(--seat-bg);
-    border-radius: var(--border-radius-md) var(--border-radius-md) 0 0;
-    padding: var(--spacing-sm) var(--spacing-sm) 0 var(--spacing-sm);
+        margin-bottom: var(--spacing-lg);
+        border-bottom: 1px solid var(--seat-border);
+        background-color: var(--seat-bg);
+        border-radius: var(--border-radius-md) var(--border-radius-md) 0 0;
+        padding: var(--spacing-sm) var(--spacing-sm) 0 var(--spacing-sm);
     }
 
     .tab-list {
@@ -414,7 +459,7 @@
         font-size: 1rem;
         font-weight: 500;
         transition: all var(--transition-speed);
-		    opacity: 0.7; /* Inactieve tabs wat dimmen */
+        opacity: 0.7;
     }
 
     .tab-button:hover {
@@ -424,21 +469,22 @@
     .tab-button.active {
         border-bottom-color: var(--button-bg);
         color: var(--button-bg);
-		    opacity: 1; /* Actieve tab volledig zichtbaar */
-    font-weight: 600;
+        opacity: 1;
+        font-weight: 600;
     }
 
     .tab-content {
         display: none;
-		    opacity: 0;
-    transition: opacity 0.3s ease-in-out;
+        opacity: 0;
+        transition: opacity 0.3s ease-in-out;
     }
 
     .tab-content.active {
         display: block;
-		    opacity: 1;
+        opacity: 1;
     }
-/* Seating Layout Styles */
+
+    /* Seating Layout Styles */
     .layout-container {
         margin-bottom: var(--spacing-xl);
         border: 1px solid var(--seat-border);
@@ -462,14 +508,14 @@
     .seating-plan {
         display: flex;
         flex-direction: column;
-        gap: var(--spacing-lg);
+        gap: var(--spacing-md);
     }
 
     .row-container {
         display: flex;
         flex-direction: column;
-    gap: var(--spacing-lg); /* Verhoogd van sm naar lg */
-    margin-bottom: var(--spacing-lg); /* Extra ruimte onder elke rij */
+        gap: var(--spacing-md);
+        margin-bottom: var(--spacing-sm);
     }
 
     .group-container {
@@ -485,15 +531,14 @@
         padding: var(--spacing-md);
         border-radius: var(--border-radius-md);
         transition: all 0.3s ease;
-		    box-shadow: 0 2px 4px rgba(0,0,0,0.05); /* Subtiele schaduw */
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
     }
 
     .seat-group:hover {
-        transform: translateY(-4px);
+        transform: translateY(-2px);
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     }
 
-    /* Seat Styles met Drag & Drop */
     .seat {
         position: relative;
         min-width: 100px;
@@ -509,32 +554,29 @@
         transition: all var(--transition-speed);
         cursor: move;
         user-select: none;
-		    font-weight: 500; /* Toegevoegd voor betere leesbaarheid */
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1); /* Subtiele schaduw toegevoegd */
+        font-weight: 500;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     }
-.button:hover:not(:disabled) {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-}
+
     .seat.dragging {
-    opacity: 0.7;
-    transform: scale(1.05);
-    box-shadow: 0 8px 16px rgba(0,0,0,0.2);
-    z-index: 1000;
+        opacity: 0.7;
+        transform: scale(1.05);
+        box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+        z-index: 1000;
     }
 
     .seat:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-    background-color: var(--seat-bg);
-    z-index: 1;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        background-color: var(--seat-bg);
+        z-index: 1;
     }
 
     .seat.drag-over {
-    background-color: var(--button-bg);
-    color: var(--button-text);
-    transform: scale(1.05);
-    box-shadow: 0 0 0 2px var(--button-bg);
+        background-color: var(--button-bg);
+        color: var(--button-text);
+        transform: scale(1.05);
+        box-shadow: 0 0 0 2px var(--button-bg);
     }
 
     .seat-number {
@@ -554,8 +596,8 @@
     .teacher-desk {
         display: flex;
         justify-content: center;
-        margin-bottom: var(--spacing-xl);
-		    padding: var(--spacing-lg) 0; /* Extra padding boven en onder */
+        margin-bottom: var(--spacing-md);
+        padding: var(--spacing-lg) 0;
     }
 
     .teacher-seat {
@@ -571,8 +613,7 @@
         font-weight: bold;
     }
 
-
-/* Notification System */
+    /* Notification System */
     .notification-container {
         position: fixed;
         top: var(--spacing-lg);
@@ -594,21 +635,6 @@
         align-items: center;
         gap: var(--spacing-sm);
         animation: slideIn 0.3s ease-out;
-    }
-
-    .notification.success {
-        background-color: var(--success-color);
-        color: white;
-    }
-
-    .notification.error {
-        background-color: var(--error-color);
-        color: white;
-    }
-
-    .notification.warning {
-        background-color: var(--warning-color);
-        color: white;
     }
 
     @keyframes slideIn {
@@ -683,7 +709,8 @@
     .fixed-seat-input input[type="number"] {
         width: 80px;
     }
-/* Responsive Design */
+
+    /* Responsive Design */
     @media (max-width: 768px) {
         body {
             padding: var(--spacing-sm);
@@ -691,51 +718,6 @@
 
         .container {
             padding: var(--spacing-md);
-        }
-
-        .tab-list {
-            flex-direction: column;
-            gap: 0;
-        }
-
-        .tab-button {
-            width: 100%;
-            text-align: left;
-            padding: var(--spacing-sm) var(--spacing-md);
-        }
-
-        .group-container {
-            flex-direction: column;
-            align-items: center;
-            gap: var(--spacing-md);
-        }
-
-        .seat-group {
-            width: 100%;
-            justify-content: center;
-        }
-
-        .seat {
-            min-width: 80px;
-            font-size: 0.9rem;
-        }
-
-        .fixed-seat-input {
-            flex-direction: column;
-            align-items: stretch;
-        }
-
-        .fixed-seat-input input[type="number"] {
-            width: 100%;
-        }
-
-        .button {
-            width: 100%;
-            margin-bottom: var(--spacing-sm);
-        }
-
-        .teacher-seat {
-            width: 150px;
         }
 
         .list-controls {
@@ -751,39 +733,19 @@
         .list-select {
             width: 100%;
         }
-    }
 
-    /* Print Styles */
-    @media print {
-        .theme-toggle,
-        .controls,
-        .fixed-seats-section,
-        #studentInput {
-            display: none !important;
+        .fixed-seat-input {
+            flex-direction: column;
+            align-items: stretch;
         }
 
-        .layout-container {
-            break-inside: avoid;
-            border: none;
-            box-shadow: none;
-            margin: var(--spacing-lg) 0;
+        .fixed-seat-input input[type="number"] {
+            width: 100%;
         }
 
-        body {
-            background-color: white;
-            color: black;
-            background-image: none;
-        }
-
-        .seat {
-            border: 1px solid #000;
-        }
-
-        .layout-container,
-        .list-management,
-        .fixed-seats-section {
-            background-color: transparent;
-            backdrop-filter: none;
+        .button {
+            width: 100%;
+            margin-bottom: var(--spacing-sm);
         }
     }
 </style>
@@ -865,7 +827,8 @@
             this.saveToStorage();
         }
     }
-// NotificationSystem class
+
+    // NotificationSystem class
     class NotificationSystem {
         constructor() {
             this.container = document.getElementById('notificationContainer');
@@ -899,8 +862,7 @@
             this.show(message, 'warning', 4000);
         }
     }
-
-    // ListManager class
+// ListManager class
     class ListManager {
         constructor(state, notifications) {
             this.state = state;
@@ -917,6 +879,13 @@
 
             // Update select options
             this.updateListSelect();
+
+            // Setup collapse functionality
+            const listManagement = document.querySelector('.list-management');
+            const header = document.querySelector('.list-management-header');
+            header.addEventListener('click', () => {
+                listManagement.classList.toggle('collapsed');
+            });
 
             // Event listeners
             listSelect.addEventListener('change', () => {
@@ -974,7 +943,8 @@
                 }
             });
         }
-updateListSelect() {
+
+        updateListSelect() {
             const listSelect = document.getElementById('listSelect');
             const currentValue = listSelect.value;
             
@@ -1046,8 +1016,7 @@ updateListSelect() {
             this.state.saveToStorage();
         }
     }
-
-    // SeatingGenerator class
+// SeatingGenerator class
     class SeatingGenerator {
         constructor(state) {
             this.state = state;
@@ -1068,7 +1037,8 @@ updateListSelect() {
 
             const { maxSeats, seatsPerRow } = layouts[type];
             const seating = new Array(maxSeats).fill(null);
-// Eerst vaste plaatsen toewijzen
+
+            // Eerst vaste plaatsen toewijzen
             this.state.fixedSeats.forEach((seatNumber, studentName) => {
                 if (seatNumber < maxSeats) {
                     seating[seatNumber] = { name: studentName };
@@ -1138,15 +1108,12 @@ updateListSelect() {
         }
 
         swapSeats(sourceIndex, targetIndex, layout) {
-            // Haal huidige opstelling op uit de state layouts
             const seating = this.state.layouts[layout];
             if (!seating) return;
             
-            // Wissel de stoelen
             [seating[sourceIndex], seating[targetIndex]] = 
             [seating[targetIndex], seating[sourceIndex]];
             
-            // Update vaste plaatsen indien nodig
             const sourceName = seating[sourceIndex]?.name;
             const targetName = seating[targetIndex]?.name;
             
@@ -1157,16 +1124,12 @@ updateListSelect() {
                 this.state.fixedSeats.set(targetName, sourceIndex);
             }
             
-            // Sla de gewijzigde layout op in state
             this.state.layouts[layout] = seating;
-            
-            // Render opnieuw
             this.render();
-            
-            // Sla nieuwe staat op
             this.state.saveToStorage();
         }
-createRowGroup(seating, startIndex, groupSizes, layout) {
+
+        createRowGroup(seating, startIndex, groupSizes, layout) {
             const rowDiv = document.createElement('div');
             rowDiv.className = 'group-container';
             
@@ -1206,7 +1169,6 @@ createRowGroup(seating, startIndex, groupSizes, layout) {
                 plan.appendChild(teacherDesk);
 
                 const config = layoutConfigs[layout];
-
                 for (let row = 0; row < config.rows; row++) {
                     const rowContainer = document.createElement('div');
                     rowContainer.className = 'row-container';
@@ -1218,8 +1180,7 @@ createRowGroup(seating, startIndex, groupSizes, layout) {
             });
         }
     }
-
-    // TabManager class
+// TabManager class
     class TabManager {
         constructor(state) {
             this.state = state;
@@ -1255,7 +1216,8 @@ createRowGroup(seating, startIndex, groupSizes, layout) {
             document.getElementById(`tab${tabId}`).click();
         }
     }
-// EventHandlers class
+
+    // EventHandlers class
     class EventHandlers {
         constructor(state, notifications, seatingGenerator, tabManager) {
             this.state = state;
@@ -1281,9 +1243,38 @@ createRowGroup(seating, startIndex, groupSizes, layout) {
                 this.saveState();
             });
 
-            // Print Button
-            document.getElementById('printBtn').addEventListener('click', () => {
-                window.print();
+            // Screenshot Button
+            document.getElementById('screenshotBtn').addEventListener('click', async () => {
+                const button = document.getElementById('screenshotBtn');
+                button.disabled = true;
+                try {
+                    const activeLayout = document.querySelector('.tab-content.active');
+                    const canvas = await html2canvas(activeLayout, {
+                        backgroundColor: getComputedStyle(document.body).getPropertyValue('--bg-color'),
+                        scale: 3,
+                        logging: false,
+                        useCORS: true
+                    });
+
+                    // Convert to blob and download
+                    canvas.toBlob((blob) => {
+                        const url = URL.createObjectURL(blob);
+                        const link = document.createElement('a');
+                        const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+                        link.download = `klasopstelling-${timestamp}.png`;
+                        link.href = url;
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                        URL.revokeObjectURL(url);
+                    }, 'image/png', 1.0);
+
+                    this.notifications.success('Plattegrond gedownload');
+                } catch (error) {
+                    this.notifications.error('Fout bij maken screenshot: ' + error.message);
+                } finally {
+                    button.disabled = false;
+                }
             });
 
             // Add Fixed Seat Button
@@ -1359,7 +1350,7 @@ createRowGroup(seating, startIndex, groupSizes, layout) {
                 this.notifications.error('Voer eerst leerlingen in');
                 return;
             }
-            // Reset de layouts wanneer er een nieuwe opstelling wordt gegenereerd
+            
             this.state.layouts = { '232': [], '222': [], '33': [] };
             this.seatingGenerator.render();
             this.notifications.success('Nieuwe opstelling gegenereerd');
@@ -1383,6 +1374,7 @@ createRowGroup(seating, startIndex, groupSizes, layout) {
     document.addEventListener('DOMContentLoaded', () => {
         const state = new State();
         const notifications = new NotificationSystem();
+        window.notifications = notifications; // Make notifications globally available
         const seatingGenerator = new SeatingGenerator(state);
         const tabManager = new TabManager(state);
         const listManager = new ListManager(state, notifications);
@@ -1431,5 +1423,3 @@ createRowGroup(seating, startIndex, groupSizes, layout) {
         }
     });
 </script>
-</body>
-</html>
