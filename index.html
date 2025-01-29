@@ -5,10 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Klasopstelling Generator</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <select id="languageSelect" class="language-select"aria-label="Selecteer een taal">
-        <option value="nl" selected>Nederlands</option>
-        <option value="en">English</option>
-    </select>
 </head>
 <body>
     <div class="container">
@@ -151,7 +147,6 @@
     </template>
 
 <style>
-
 /* CSS Reset en Variabelen */
     :root {
         /* Kleurenschema - Light Mode */
@@ -201,15 +196,7 @@
         margin: 0;
         padding: 0;
     }
-.language-select {
-    margin-left: 10px;
-    padding: 5px;
-    font-size: 1rem;
-    border-radius: 5px;
-    border: 1px solid var(--seat-border);
-    background: var(--seat-bg);
-    color: var(--text-color);
-}
+
     body {
         font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
         max-width: 1200px;
@@ -763,83 +750,6 @@
     }
 </style>
 <script>
-        const translations = {
-    nl: {
-        title: "Klasopstelling Generator",
-        header: "Boerhaave Klasopstelling Generator",
-        listManagement: "Lijstbeheer",
-        loadList: "Laad Lijst",
-        deleteList: "Verwijder Lijst",
-        saveList: "Sla Lijst Op",
-        enterNames: "Voer de namen van de leerlingen in (één naam per regel):",
-        placeholderNames: "Jan Janssen\nPiet Pietersen\nMarie de Vries",
-        assignSeats: "Vaste plaatsen toewijzen",
-        addFixedSeat: "Voeg vaste plaats toe",
-        generateLayout: "Genereer Opstellingen",
-        save: "Opslaan",
-        downloadPlan: "Download Plattegrond",
-        setup222: "2-2-2 Opstelling",
-        setup232: "2-3-2 Opstelling",
-        setup33: "3-3 Opstelling",
-        teacher: "Docent",
-        selectLanguage: "Selecteer een taal"
-    },
-    en: {
-        title: "Classroom Layout Generator",
-        header: "Boerhaave Classroom Layout Generator",
-        listManagement: "List Management",
-        loadList: "Load List",
-        deleteList: "Delete List",
-        saveList: "Save List",
-        enterNames: "Enter student names (one per line):",
-        placeholderNames: "John Doe\nJane Smith\nMichael Johnson",
-        assignSeats: "Assign Fixed Seats",
-        addFixedSeat: "Add Fixed Seat",
-        generateLayout: "Generate Layouts",
-        save: "Save",
-        downloadPlan: "Download Layout",
-        setup222: "2-2-2 Layout",
-        setup232: "2-3-2 Layout",
-        setup33: "3-3 Layout",
-        teacher: "Teacher",
-        selectLanguage: "Select Language"
-    }
-};
-
-    function updateLanguage(lang) {
-    document.title = translations[lang].title;
-    document.querySelector("h1").textContent = translations[lang].header;
-    document.querySelector(".list-management-header h2").textContent = translations[lang].listManagement;
-    document.getElementById("loadListBtn").textContent = translations[lang].loadList;
-    document.getElementById("deleteListBtn").textContent = translations[lang].deleteList;
-    document.getElementById("saveListBtn").textContent = translations[lang].saveList;
-    document.querySelector("label[for='studentNames']").textContent = translations[lang].enterNames;
-    document.getElementById("studentNames").placeholder = translations[lang].placeholderNames;
-    document.querySelector(".fixed-seats-section h2").textContent = translations[lang].assignSeats;
-    document.getElementById("addFixedSeatBtn").textContent = translations[lang].addFixedSeat;
-    document.getElementById("generateBtn").textContent = translations[lang].generateLayout;
-    document.getElementById("saveBtn").textContent = translations[lang].save;
-    document.getElementById("screenshotBtn").textContent = translations[lang].downloadPlan;
-    document.getElementById("tab222").textContent = translations[lang].setup222;
-    document.getElementById("tab232").textContent = translations[lang].setup232;
-    document.getElementById("tab33").textContent = translations[lang].setup33;
-    document.querySelector(".teacher-seat").textContent = translations[lang].teacher;
-}
-
-// Taal laden uit localStorage
-document.addEventListener("DOMContentLoaded", () => {
-    const savedLanguage = localStorage.getItem("language") || "nl";
-    document.getElementById("languageSelect").value = savedLanguage;
-    updateLanguage(savedLanguage);
-});
-
-// Eventlistener voor taalwissel
-document.getElementById("languageSelect").addEventListener("change", (event) => {
-    const selectedLanguage = event.target.value;
-    localStorage.setItem("language", selectedLanguage);
-    updateLanguage(selectedLanguage);
-});
-
     // State Management
     class State {
         constructor() {
