@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Klasopstelling Generator</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <select id="languageSelect" class="language-select"aria-labal="Selecteer een taal">
-        <option value="nl"> selected>Nederlands</option>
+    <select id="languageSelect" class="language-select"aria-label="Selecteer een taal">
+        <option value="nl" selected>Nederlands</option>
         <option value="en">English</option>
     </select>
 </head>
@@ -151,48 +151,6 @@
     </template>
 
 <style>
-    const translations = {
-    nl: {
-        title: "Klasopstelling Generator",
-        header: "Boerhaave Klasopstelling Generator",
-        listManagement: "Lijstbeheer",
-        loadList: "Laad Lijst",
-        deleteList: "Verwijder Lijst",
-        saveList: "Sla Lijst Op",
-        enterNames: "Voer de namen van de leerlingen in (één naam per regel):",
-        placeholderNames: "Jan Janssen\nPiet Pietersen\nMarie de Vries",
-        assignSeats: "Vaste plaatsen toewijzen",
-        addFixedSeat: "Voeg vaste plaats toe",
-        generateLayout: "Genereer Opstellingen",
-        save: "Opslaan",
-        downloadPlan: "Download Plattegrond",
-        setup222: "2-2-2 Opstelling",
-        setup232: "2-3-2 Opstelling",
-        setup33: "3-3 Opstelling",
-        teacher: "Docent",
-        selectLanguage: "Selecteer een taal"
-    },
-    en: {
-        title: "Classroom Layout Generator",
-        header: "Boerhaave Classroom Layout Generator",
-        listManagement: "List Management",
-        loadList: "Load List",
-        deleteList: "Delete List",
-        saveList: "Save List",
-        enterNames: "Enter student names (one per line):",
-        placeholderNames: "John Doe\nJane Smith\nMichael Johnson",
-        assignSeats: "Assign Fixed Seats",
-        addFixedSeat: "Add Fixed Seat",
-        generateLayout: "Generate Layouts",
-        save: "Save",
-        downloadPlan: "Download Layout",
-        setup222: "2-2-2 Layout",
-        setup232: "2-3-2 Layout",
-        setup33: "3-3 Layout",
-        teacher: "Teacher",
-        selectLanguage: "Select Language"
-    }
-};
 
 /* CSS Reset en Variabelen */
     :root {
@@ -805,6 +763,49 @@
     }
 </style>
 <script>
+        const translations = {
+    nl: {
+        title: "Klasopstelling Generator",
+        header: "Boerhaave Klasopstelling Generator",
+        listManagement: "Lijstbeheer",
+        loadList: "Laad Lijst",
+        deleteList: "Verwijder Lijst",
+        saveList: "Sla Lijst Op",
+        enterNames: "Voer de namen van de leerlingen in (één naam per regel):",
+        placeholderNames: "Jan Janssen\nPiet Pietersen\nMarie de Vries",
+        assignSeats: "Vaste plaatsen toewijzen",
+        addFixedSeat: "Voeg vaste plaats toe",
+        generateLayout: "Genereer Opstellingen",
+        save: "Opslaan",
+        downloadPlan: "Download Plattegrond",
+        setup222: "2-2-2 Opstelling",
+        setup232: "2-3-2 Opstelling",
+        setup33: "3-3 Opstelling",
+        teacher: "Docent",
+        selectLanguage: "Selecteer een taal"
+    },
+    en: {
+        title: "Classroom Layout Generator",
+        header: "Boerhaave Classroom Layout Generator",
+        listManagement: "List Management",
+        loadList: "Load List",
+        deleteList: "Delete List",
+        saveList: "Save List",
+        enterNames: "Enter student names (one per line):",
+        placeholderNames: "John Doe\nJane Smith\nMichael Johnson",
+        assignSeats: "Assign Fixed Seats",
+        addFixedSeat: "Add Fixed Seat",
+        generateLayout: "Generate Layouts",
+        save: "Save",
+        downloadPlan: "Download Layout",
+        setup222: "2-2-2 Layout",
+        setup232: "2-3-2 Layout",
+        setup33: "3-3 Layout",
+        teacher: "Teacher",
+        selectLanguage: "Select Language"
+    }
+};
+
     function updateLanguage(lang) {
     document.title = translations[lang].title;
     document.querySelector("h1").textContent = translations[lang].header;
