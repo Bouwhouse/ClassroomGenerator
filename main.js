@@ -117,6 +117,32 @@ class TabManager {
   }
 }
 
+// Nieuwe functie: layout genereren
+function generateLayout(type, state) {
+  const layouts = {
+    '232': { maxSeats: 35 },
+    '222': { maxSeats: 32 },
+    '33': { maxSeats: 36 }
+  };
+
+  const { maxSeats } = layouts[type];
+  const seating = new Array(maxSeats).fill(null);
+
+  state.fixedSeats.forEach((seatNumber, studentName) => {
+    if (seatNumber < maxSeats) seating[seatNumber] = { name: studentName };
+  });
+
+  const remaining = state.students.filter(s => !state.fixedSeats.has(s));
+  const shuffled = remaining.sort(() => Math.random() - 0.5);
+
+  let i = 0;
+  for (let j = 0; j < seating.length && i < shuffled.length; j++) {
+    if (!seating[j]) seating[j] = { name: shuffled[i++] };
+  }
+
+  return seating;
+}
+
 class EventHandlers {
   constructor(state, notifications, seatingGenerator, tabManager, listManager) {
     this.state = state;
@@ -244,7 +270,13 @@ window.addEventListener('DOMContentLoaded', () => {
     render: () => {
       const layout = state.activeTab;
       const plan = document.getElementById(`seatingPlan${layout}`);
-      const layoutData = state.layouts[layout];
+      let layoutData = state.layouts[layout];
+
+      if (layoutData.length === 0 && state.students.length > 0) {
+        layoutData = generateLayout(layout, state);
+        state.layouts[layout] = layoutData;
+      }
+
       plan.innerHTML = '';
       layoutData.forEach((seat, i) => {
         const seatDiv = document.createElement('div');
