@@ -117,146 +117,144 @@ class TabManager {
   }
 }
 
-// Nieuwe functie: layout genereren
-function generateLayout(type, state) {
-  const layouts = {
-    '232': { maxSeats: 35 },
-    '222': { maxSeats: 32 },
-    '33': { maxSeats: 36 }
-  };
-
-  const { maxSeats } = layouts[type];
-  const seating = new Array(maxSeats).fill(null);
-
-  state.fixedSeats.forEach((seatNumber, studentName) => {
-    if (seatNumber < maxSeats) seating[seatNumber] = { name: studentName };
-  });
-
-  const remaining = state.students.filter(s => !state.fixedSeats.has(s));
-  const shuffled = remaining.sort(() => Math.random() - 0.5);
-
-  let i = 0;
-  for (let j = 0; j < seating.length && i < shuffled.length; j++) {
-    if (!seating[j]) seating[j] = { name: shuffled[i++] };
-  }
-
-  return seating;
-}
-
-class EventHandlers {
-  constructor(state, notifications, seatingGenerator, tabManager, listManager) {
+class SeatingGenerator {
+  constructor(state) {
     this.state = state;
-    this.notifications = notifications;
-    this.seatingGenerator = seatingGenerator;
-    this.tabManager = tabManager;
-    this.listManager = listManager;
-    this.setup();
   }
 
-  setup() {
-    document.getElementById('darkModeToggle').addEventListener('click', () => {
-      document.body.classList.toggle('dark-mode');
-      this.state.darkMode = document.body.classList.contains('dark-mode');
-      this.state.saveToStorage();
-    });
-
-    document.getElementById('generateBtn').addEventListener('click', () => {
-      if (this.state.students.length === 0) {
-        this.notifications.error('Voer eerst leerlingen in');
-        return;
-      }
-      this.state.layouts = { '232': [], '222': [], '33': [] };
-      this.seatingGenerator.render();
-      this.notifications.success('Nieuwe opstelling gegenereerd');
-    });
-
-    document.getElementById('saveBtn').addEventListener('click', () => {
-      this.state.saveToStorage();
-      this.notifications.success('Configuratie opgeslagen');
-    });
-
-    document.getElementById('screenshotBtn').addEventListener('click', async () => {
-      const button = document.getElementById('screenshotBtn');
-      button.disabled = true;
-      try {
-        const activeLayout = document.querySelector('.tab-content.active');
-        const canvas = await html2canvas(activeLayout, {
-          backgroundColor: getComputedStyle(document.body).getPropertyValue('--bg-color'),
-          scale: 3,
-          logging: false,
-          useCORS: true
-        });
-        canvas.toBlob(blob => {
-          const url = URL.createObjectURL(blob);
-          const link = document.createElement('a');
-          const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
-          link.download = `klasopstelling-${timestamp}.png`;
-          link.href = url;
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-          URL.revokeObjectURL(url);
-        });
-        this.notifications.success('Plattegrond gedownload');
-      } catch (e) {
-        this.notifications.error('Fout bij maken screenshot: ' + e.message);
-      } finally {
-        button.disabled = false;
-      }
-    });
-
-    document.getElementById('addFixedSeatBtn').addEventListener('click', () => {
-      this.addFixedSeatInput();
-    });
-
-    document.getElementById('studentNames').addEventListener('input', this.debounce(() => this.updateStudents(), 500));
-  }
-
-  updateStudents() {
-    const input = document.getElementById('studentNames').value;
-    const names = input.split('\n').map(n => n.trim()).filter(n => n);
-    const duplicates = names.filter((name, i) => names.indexOf(name) !== i);
-    if (duplicates.length > 0) {
-      this.notifications.error(`Dubbele namen gevonden: ${duplicates.join(', ')}`);
-      return;
-    }
-    this.state.students = names;
-    this.state.saveToStorage();
-  }
-
-  addFixedSeatInput() {
-    const container = document.getElementById('fixedSeatsContainer');
-    const template = document.getElementById('fixedSeatTemplate');
-    const clone = template.content.cloneNode(true);
-    const removeBtn = clone.querySelector('.remove-fixed');
-    removeBtn.addEventListener('click', e => {
-      e.target.closest('.fixed-seat-input').remove();
-      this.updateFixedSeats();
-    });
-    clone.querySelectorAll('input').forEach(input => {
-      input.addEventListener('change', () => this.updateFixedSeats());
-    });
-    container.appendChild(clone);
-  }
-
-  updateFixedSeats() {
-    this.state.fixedSeats.clear();
-    document.querySelectorAll('.fixed-seat-input').forEach(input => {
-      const name = input.querySelector('.fixed-name').value.trim();
-      const pos = parseInt(input.querySelector('.fixed-position').value);
-      if (name && pos >= 1 && pos <= 35) {
-        this.state.fixedSeats.set(name, pos - 1);
-      }
-    });
-    this.state.saveToStorage();
-  }
-
-  debounce(func, wait) {
-    let timeout;
-    return (...args) => {
-      clearTimeout(timeout);
-      timeout = setTimeout(() => func.apply(this, args), wait);
+  generateLayout(type) {
+    const layoutConfigs = {
+      '232': { groupSizes: [2, 3, 2], rows: 5, seatsPerRow: 7 },
+      '222': { groupSizes: [2, 2, 2], rows: 6, seatsPerRow: 6 },
+      '33': { groupSizes: [3, 3], rows: 6, seatsPerRow: 6 }
     };
+
+    const { rows, seatsPerRow } = layoutConfigs[type];
+    const maxSeats = rows * seatsPerRow;
+    const seating = new Array(maxSeats).fill(null);
+
+    this.state.fixedSeats.forEach((seatNumber, studentName) => {
+      if (seatNumber < maxSeats) seating[seatNumber] = { name: studentName };
+    });
+
+    const remaining = this.state.students.filter(s => !this.state.fixedSeats.has(s));
+    const shuffled = remaining.sort(() => Math.random() - 0.5);
+
+    let i = 0;
+    for (let j = 0; j < seating.length && i < shuffled.length; j++) {
+      if (!seating[j]) seating[j] = { name: shuffled[i++] };
+    }
+
+    this.state.layouts[type] = seating;
+    return seating;
+  }
+
+  createSeatElement(seat, index, layout) {
+    const seatDiv = document.createElement('div');
+    seatDiv.className = 'seat';
+    seatDiv.draggable = true;
+    seatDiv.dataset.index = index;
+    seatDiv.innerHTML = `
+      <span class="seat-number">${index + 1}</span>
+      <span>${seat ? seat.name : '---'}</span>
+    `;
+
+    seatDiv.addEventListener('dragstart', (e) => {
+      e.target.classList.add('dragging');
+      e.dataTransfer.setData('text/plain', index);
+    });
+
+    seatDiv.addEventListener('dragend', (e) => {
+      e.target.classList.remove('dragging');
+    });
+
+    seatDiv.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      seatDiv.classList.add('drag-over');
+    });
+
+    seatDiv.addEventListener('dragleave', (e) => {
+      seatDiv.classList.remove('drag-over');
+    });
+
+    seatDiv.addEventListener('drop', (e) => {
+      e.preventDefault();
+      seatDiv.classList.remove('drag-over');
+      const sourceIndex = parseInt(e.dataTransfer.getData('text/plain'));
+      const targetIndex = parseInt(seatDiv.dataset.index);
+      if (sourceIndex !== targetIndex) {
+        this.swapSeats(sourceIndex, targetIndex, layout);
+      }
+    });
+
+    return seatDiv;
+  }
+
+  swapSeats(sourceIndex, targetIndex, layout) {
+    const seating = this.state.layouts[layout];
+    if (!seating) return;
+
+    [seating[sourceIndex], seating[targetIndex]] = [seating[targetIndex], seating[sourceIndex]];
+
+    const sourceName = seating[sourceIndex]?.name;
+    const targetName = seating[targetIndex]?.name;
+
+    if (sourceName && this.state.fixedSeats.has(sourceName)) {
+      this.state.fixedSeats.set(sourceName, targetIndex);
+    }
+    if (targetName && this.state.fixedSeats.has(targetName)) {
+      this.state.fixedSeats.set(targetName, sourceIndex);
+    }
+
+    this.state.layouts[layout] = seating;
+    this.render();
+    this.state.saveToStorage();
+  }
+
+  render() {
+    const layoutConfigs = {
+      '232': { groupSizes: [2, 3, 2], rows: 5, seatsPerRow: 7 },
+      '222': { groupSizes: [2, 2, 2], rows: 6, seatsPerRow: 6 },
+      '33': { groupSizes: [3, 3], rows: 6, seatsPerRow: 6 }
+    };
+
+    ['232', '222', '33'].forEach(layout => {
+      const seating = this.state.layouts[layout].length
+        ? this.state.layouts[layout]
+        : this.generateLayout(layout);
+
+      const plan = document.getElementById(`seatingPlan${layout}`);
+      plan.innerHTML = '';
+
+      const teacherDesk = document.createElement('div');
+      teacherDesk.className = 'teacher-desk';
+      teacherDesk.innerHTML = '<div class="teacher-seat">Docent</div>';
+      plan.appendChild(teacherDesk);
+
+      const config = layoutConfigs[layout];
+      for (let row = 0; row < config.rows; row++) {
+        const rowDiv = document.createElement('div');
+        rowDiv.className = 'row-container';
+        const groupContainer = document.createElement('div');
+        groupContainer.className = 'group-container';
+
+        let seatIndex = row * config.seatsPerRow;
+        for (const groupSize of config.groupSizes) {
+          const group = document.createElement('div');
+          group.className = 'seat-group';
+
+          for (let i = 0; i < groupSize; i++) {
+            group.appendChild(this.createSeatElement(seating[seatIndex], seatIndex, layout));
+            seatIndex++;
+          }
+
+          groupContainer.appendChild(group);
+        }
+
+        rowDiv.appendChild(groupContainer);
+        plan.appendChild(rowDiv);
+      }
+    });
   }
 }
 
@@ -265,30 +263,8 @@ window.addEventListener('DOMContentLoaded', () => {
   const state = new State();
   const notifications = new NotificationSystem();
   const tabManager = new TabManager(state);
-
-  const seatingGenerator = {
-    render: () => {
-      const layout = state.activeTab;
-      const plan = document.getElementById(`seatingPlan${layout}`);
-      let layoutData = state.layouts[layout];
-
-      if (layoutData.length === 0 && state.students.length > 0) {
-        layoutData = generateLayout(layout, state);
-        state.layouts[layout] = layoutData;
-      }
-
-      plan.innerHTML = '';
-      layoutData.forEach((seat, i) => {
-        const seatDiv = document.createElement('div');
-        seatDiv.className = 'seat';
-        seatDiv.innerHTML = `<span class="seat-number">${i + 1}</span><span>${seat?.name || '---'}</span>`;
-        plan.appendChild(seatDiv);
-      });
-    }
-  };
-
+  const seatingGenerator = new SeatingGenerator(state);
   const listManager = { updateUI: () => {}, updateListSelect: () => {} };
-
   const handlers = new EventHandlers(state, notifications, seatingGenerator, tabManager, listManager);
 
   if (state.loadFromStorage()) {
