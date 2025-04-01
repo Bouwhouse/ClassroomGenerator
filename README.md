@@ -14,7 +14,7 @@ Een interactieve webapplicatie waarmee je eenvoudig klasopstellingen kunt genere
 
 ## 🖼️ Voorbeeld
 
-*(Voeg hier een screenshot toe van de app in actie)*
+![Voorbeeld van de klasopstelling](./screenshot.png)
 
 ## 🚀 Gebruik
 
@@ -50,5 +50,3 @@ MIT License – zie [LICENSE](./LICENSE)
 Voel je vrij om issues te melden of pull requests in te dienen. Feedback is welkom!
 
 ---
-
-📬 Contact: *[je naam of e-mailadres hier]*  
