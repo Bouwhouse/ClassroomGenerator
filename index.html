@@ -17,34 +17,6 @@
         </header>
 
         <main>
-            <section class="list-management collapsed">
-                <div class="list-management-header">
-                    <h2>Lijstbeheer</h2>
-                    <button class="collapse-toggle" aria-label="Toon/verberg lijstbeheer">
-                        <span class="arrow">▼</span>
-                    </button>
-                </div>
-                <div class="list-management-content">
-                    <div class="list-controls">
-                        <select id="listSelect" class="list-select" aria-label="Selecteer een opgeslagen lijst">
-                            <option value="">-- Selecteer een lijst --</option>
-                        </select>
-                        <button id="loadListBtn" class="button button-secondary" disabled>
-                            Laad Lijst
-                        </button>
-                        <button id="deleteListBtn" class="button button-danger" disabled>
-                            Verwijder Lijst
-                        </button>
-                    </div>
-                    <div class="save-list-form">
-                        <input type="text" id="listName" placeholder="Geef deze lijst een naam" 
-                               aria-label="Naam voor nieuwe lijst">
-                        <button id="saveListBtn" class="button button-primary">
-                            Sla Lijst Op
-                        </button>
-                    </div>
-                </div>
-            </section>
 <section class="form-group" id="studentInput">
                 <label for="studentNames">Voer de namen van de leerlingen in (één naam per regel):</label>
                 <textarea 
@@ -126,6 +98,34 @@
                 <div id="content33" class="tab-content layout-container" role="tabpanel" aria-labelledby="tab33">
                     <h3>3-3 Opstelling</h3>
                     <div id="seatingPlan33" class="seating-plan" aria-label="3-3 klasopstelling"></div>
+                </div>
+            </section>
+                      <section class="list-management collapsed">
+                <div class="list-management-header">
+                    <h2>📁 Lijstbeheer (optioneel)</h2>
+                    <button class="collapse-toggle" aria-label="Toon/verberg lijstbeheer">
+                        <span class="arrow">▼</span>
+                    </button>
+                </div>
+                <div class="list-management-content">
+                    <div class="list-controls">
+                        <select id="listSelect" class="list-select" aria-label="Selecteer een opgeslagen lijst">
+                            <option value="">-- Selecteer een lijst --</option>
+                        </select>
+                        <button id="loadListBtn" class="button button-secondary" disabled>
+                            Laad Lijst
+                        </button>
+                        <button id="deleteListBtn" class="button button-danger" disabled>
+                            Verwijder Lijst
+                        </button>
+                    </div>
+                    <div class="save-list-form">
+                        <input type="text" id="listName" placeholder="Geef deze lijst een naam" 
+                               aria-label="Naam voor nieuwe lijst">
+                        <button id="saveListBtn" class="button button-primary">
+                            Sla Lijst Op
+                        </button>
+                    </div>
                 </div>
             </section>
         </main>
