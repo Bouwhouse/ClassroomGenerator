@@ -7,6 +7,7 @@ Een interactieve webapplicatie waarmee je eenvoudig klasopstellingen kunt genere
 - 🎒 Leerlingen invoeren (één naam per regel)
 - 📌 Vaste plaatsen instellen voor specifieke leerlingen
 - 🧠 Drie verschillende opstellingslayouts: `2-2-2`, `2-3-2`, en `3-3`
+- 👌 Drag-and-drop leerlingen voor finetuning van plattegrond
 - 🎲 Willekeurige plaatsing van overige leerlingen
 - 💾 Opslaan en laden van lijsten
 - 🌗 Donkere modus
