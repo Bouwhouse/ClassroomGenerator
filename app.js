@@ -11,6 +11,7 @@
             this.darkMode = false;
             this.activeTab = '222';
             this.savedLists = new Map();
+            this.colorTheme = 'blue'; // Default color theme
         }
 
         saveToStorage() {
@@ -20,7 +21,8 @@
                 darkMode: this.darkMode,
                 activeTab: this.activeTab,
                 layouts: this.layouts,
-                savedLists: Array.from(this.savedLists.entries())
+                savedLists: Array.from(this.savedLists.entries()),
+                colorTheme: this.colorTheme
             };
             localStorage.setItem('classroomState', JSON.stringify(data));
         }
@@ -34,6 +36,7 @@
                 this.activeTab = data.activeTab || '222';
                 this.layouts = data.layouts || { '232': [], '222': [], '33': [] };
                 this.savedLists = new Map(data.savedLists || []);
+                this.colorTheme = data.colorTheme || 'blue';
                 return true;
             }
             return false;
@@ -270,6 +273,16 @@
             this.state = state;
         }
 
+        // Fisher-Yates shuffle implementation
+        shuffle(array) {
+            const shuffled = [...array];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
+        }
+
         generateLayout(type) {
             // Als er al een layout bestaat voor dit type, gebruik die
             if (this.state.layouts[type] && this.state.layouts[type].length > 0) {
@@ -297,7 +310,7 @@
             const remainingStudents = this.state.students.filter(
                 student => !this.state.fixedSeats.has(student)
             );
-            const shuffledStudents = remainingStudents.sort(() => Math.random() - 0.5);
+            const shuffledStudents = this.shuffle(remainingStudents);
             let studentIndex = 0;
 
             for (let i = 0; i < maxSeats && studentIndex < shuffledStudents.length; i++) {
@@ -534,6 +547,30 @@
             document.getElementById('studentNames').addEventListener('input', 
                 this.debounce(() => this.updateStudents(), 500)
             );
+
+            // Color theme change handler
+            const colorButtons = document.querySelectorAll('.color-button');
+            colorButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const theme = button.dataset.theme;
+                    this.state.colorTheme = theme;
+                    document.documentElement.setAttribute('data-theme', theme);
+                    
+                    // Update active state of buttons
+                    colorButtons.forEach(btn => btn.classList.remove('active'));
+                    button.classList.add('active');
+                    
+                    this.state.saveToStorage();
+                    this.notifications.success(`Thema kleur gewijzigd naar ${theme}`);
+                });
+            });
+
+            // Initialize color theme
+            const activeButton = document.querySelector(`.color-button[data-theme="${this.state.colorTheme}"]`);
+            if (activeButton) {
+                activeButton.classList.add('active');
+            }
+            document.documentElement.setAttribute('data-theme', this.state.colorTheme);
         }
 
         toggleDarkMode() {
