@@ -1,5 +1,3 @@
-I'll help you update the README to reflect the latest version while maintaining its clear and friendly structure. Here's the updated version:
-
 # 🪑 Klasopstelling Generator
 
 Een interactieve webapplicatie waarmee je eenvoudig klasopstellingen kunt genereren op basis van leerlingenlijsten en vaste plaatsen. Speciaal ontworpen voor docenten die snel en visueel klasindelingen willen maken.
@@ -60,15 +58,4 @@ MIT License – zie [LICENSE](./LICENSE)
 
 Voel je vrij om issues te melden of pull requests in te dienen. Feedback is welkom!
 
----
 
-The main changes I made to the README include:
-1. Added new features like color themes and accessibility
-2. Updated the project structure to reflect separate CSS and JS files
-3. Added more detail about the Fisher-Yates algorithm
-4. Expanded the usage instructions to include theme switching
-5. Added more detail about the developer classes
-6. Updated the external dependencies section to be more specific
-7. Added information about HD screenshot capability
-
-Would you like me to make any additional adjustments to the README?
