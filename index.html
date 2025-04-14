@@ -10,10 +10,18 @@
 <body>
     <div class="container">
         <header>
-            <h1>Klasopstelling Generator</h1>
-            <button id="darkModeToggle" class="theme-toggle" aria-label="Schakel tussen licht en donker thema">
-                🌓
-            </button>
+            <div class="header-content">
+                <img src="logo.png" alt="Klasopstelling Generator Logo" class="logo">
+                <h1>Klasopstelling Generator</h1>
+            </div>
+            <div class="theme-controls">
+                <div class="color-picker">
+                    <button class="color-button blue active" data-theme="blue" aria-label="Blauw thema"></button>
+                    <button class="color-button red" data-theme="red" aria-label="Rood thema"></button>
+                    <button class="color-button green" data-theme="green" aria-label="Groen thema"></button>
+                    <button class="color-button yellow" data-theme="yellow" aria-label="Geel thema"></button>
+                </div>
+            </div>
         </header>
 
         <main>
@@ -134,6 +142,11 @@
             <p>&copy; 2025 Klasopstelling Generator</p>
         </footer>
     </div>
+
+    <!-- Dark Mode Toggle Button -->
+    <button id="darkModeToggle" class="theme-toggle" aria-label="Schakel tussen licht en donker thema">
+        🌓
+    </button>
 
     <!-- Notifications container -->
     <div id="notificationContainer" class="notification-container" role="alert" aria-live="polite"></div>
