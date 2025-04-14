@@ -1,3 +1,5 @@
+I'll help you update the README to reflect the latest version while maintaining its clear and friendly structure. Here's the updated version:
+
 # 🪑 Klasopstelling Generator
 
 Een interactieve webapplicatie waarmee je eenvoudig klasopstellingen kunt genereren op basis van leerlingenlijsten en vaste plaatsen. Speciaal ontworpen voor docenten die snel en visueel klasindelingen willen maken.
@@ -6,12 +8,14 @@ Een interactieve webapplicatie waarmee je eenvoudig klasopstellingen kunt genere
 
 - 🎒 Leerlingen invoeren (één naam per regel)
 - 📌 Vaste plaatsen instellen voor specifieke leerlingen
+- 🎨 Vier kleurenthema's: Blauw, Rood, Groen en Geel
+- 🌗 Donkere modus met automatische kleuraanpassingen
 - 🧠 Drie verschillende opstellingslayouts: `2-2-2`, `2-3-2`, en `3-3`
 - 👌 Drag-and-drop leerlingen voor finetuning van plattegrond
-- 🎲 Willekeurige plaatsing van overige leerlingen
-- 💾 Opslaan en laden van lijsten
-- 🌗 Donkere modus
-- 📸 Download een afbeelding van de opstelling
+- 🎲 Willekeurige plaatsing van overige leerlingen (Fisher-Yates algoritme)
+- 💾 Opslaan en laden van lijsten met duplicaatdetectie
+- 📸 Download een HD afbeelding van de opstelling (3x schaal)
+- 🎯 Toegankelijke interface met ARIA-labels
 
 ## 🖼️ Voorbeeld
 
@@ -19,26 +23,32 @@ Een interactieve webapplicatie waarmee je eenvoudig klasopstellingen kunt genere
 
 ## 🚀 Gebruik
 
-1. Open `index.html` in je browser (geen installatie nodig).
-2. Voer de namen van leerlingen in.
-3. (Optioneel) Voeg vaste plaatsen toe.
-4. Kies een opstellingslayout en klik op **Genereer Opstellingen**.
-5. Sla op, download of wissel van layout.
+1. Open `index.html` in je browser (geen installatie nodig)
+2. Voer de namen van leerlingen in
+3. (Optioneel) Voeg vaste plaatsen toe
+4. Kies een opstellingslayout en klik op **Genereer Opstellingen**
+5. Pas de opstelling aan met drag-and-drop
+6. Sla op, download of wissel van layout
+7. (Optioneel) Schakel tussen licht/donker thema of kies een andere kleur
 
-## 📁 Projectstructuur
+## �� Projectstructuur
 
-- `index.html` – hoofdapplicatie (alles-in-één HTML, CSS & JS)
-- Geen externe dependencies, behalve:
-  - [`html2canvas`](https://github.com/niklasvh/html2canvas) (voor screenshots)
+- `index.html` – hoofdapplicatie
+- `style.css` – styling en thema's
+- `app.js` – applicatielogica
+- `logo.png` – applicatielogo
+- Externe dependency:
+  - [`html2canvas`](https://github.com/niklasvh/html2canvas) (voor HD screenshots)
 
 ## 🛠️ Ontwikkelaarsinfo
 
-Alle logica zit in de HTML-bestand, gestructureerd via klassen als:
-- `State`
-- `SeatingGenerator`
-- `ListManager`
-- `TabManager`
-- `NotificationSystem`
+De applicatie is gebouwd met moderne JavaScript klassen:
+- `State` – beheert applicatiestatus en persistentie
+- `SeatingGenerator` – genereert en beheert opstellingen
+- `ListManager` – beheert opslaan/laden van lijsten
+- `TabManager` – beheert layout tabs
+- `NotificationSystem` – toont feedback aan gebruikers
+- `EventHandlers` – centrale event handling
 
 ## ⚖️ Licentie
 
@@ -51,3 +61,14 @@ MIT License – zie [LICENSE](./LICENSE)
 Voel je vrij om issues te melden of pull requests in te dienen. Feedback is welkom!
 
 ---
+
+The main changes I made to the README include:
+1. Added new features like color themes and accessibility
+2. Updated the project structure to reflect separate CSS and JS files
+3. Added more detail about the Fisher-Yates algorithm
+4. Expanded the usage instructions to include theme switching
+5. Added more detail about the developer classes
+6. Updated the external dependencies section to be more specific
+7. Added information about HD screenshot capability
+
+Would you like me to make any additional adjustments to the README?
