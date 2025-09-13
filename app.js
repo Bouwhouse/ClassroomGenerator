@@ -1,4 +1,4 @@
-    // State Management
+// State Management
     class State {
         constructor() {
             this.students = [];
@@ -6,7 +6,12 @@
             this.layouts = {
                 '232': [],
                 '222': [],
-                '33': []
+                '33': [],
+                'custom': []
+            };
+            this.customLayoutConfig = {
+                rows: 5,
+                groupSizes: [2, 3, 2]
             };
             this.darkMode = false;
             this.activeTab = '222';
@@ -22,7 +27,8 @@
                 activeTab: this.activeTab,
                 layouts: this.layouts,
                 savedLists: Array.from(this.savedLists.entries()),
-                colorTheme: this.colorTheme
+                colorTheme: this.colorTheme,
+                customLayoutConfig: this.customLayoutConfig
             };
             localStorage.setItem('classroomState', JSON.stringify(data));
         }
@@ -34,9 +40,10 @@
                 this.fixedSeats = new Map(data.fixedSeats || []);
                 this.darkMode = data.darkMode || false;
                 this.activeTab = data.activeTab || '222';
-                this.layouts = data.layouts || { '232': [], '222': [], '33': [] };
+                this.layouts = data.layouts || { '232': [], '222': [], '33': [], 'custom': [] };
                 this.savedLists = new Map(data.savedLists || []);
                 this.colorTheme = data.colorTheme || 'blue';
+                this.customLayoutConfig = data.customLayoutConfig || { rows: 5, groupSizes: [2, 3, 2] };
                 return true;
             }
             return false;
@@ -65,7 +72,7 @@
             this.students = listData.students;
             this.fixedSeats = new Map(listData.fixedSeats);
             // Reset layouts wanneer een nieuwe lijst wordt geladen
-            this.layouts = { '232': [], '222': [], '33': [] };
+            this.layouts = { '232': [], '222': [], '33': [], 'custom': [] };
             this.saveToStorage();
         }
 
@@ -260,7 +267,7 @@
             document.querySelectorAll('.fixed-seat-input').forEach(input => {
                 const name = input.querySelector('.fixed-name').value.trim();
                 const position = parseInt(input.querySelector('.fixed-position').value);
-                if (name && position && position >= 1 && position <= 35) {
+                if (name && position && position >= 1 && position <= 40) {
                     this.state.fixedSeats.set(name, position - 1);
                 }
             });
@@ -289,14 +296,19 @@
                 return this.state.layouts[type];
             }
 
-            // Anders, genereer een nieuwe layout
+            const customConfig = this.state.customLayoutConfig;
+            const customSeatsPerRow = (customConfig.groupSizes && customConfig.groupSizes.length > 0)
+                ? customConfig.groupSizes.reduce((a, b) => a + b, 0)
+                : 0;
+
             const layouts = {
-                '232': { maxSeats: 35, seatsPerRow: 7 },
-                '222': { maxSeats: 32, seatsPerRow: 6 },
-                '33': { maxSeats: 36, seatsPerRow: 6 }
+                '232': { maxSeats: 35 },
+                '222': { maxSeats: 32 },
+                '33': { maxSeats: 36 },
+                'custom': { maxSeats: (customConfig.rows || 0) * customSeatsPerRow }
             };
 
-            const { maxSeats, seatsPerRow } = layouts[type];
+            const { maxSeats } = layouts[type];
             const seating = new Array(maxSeats).fill(null);
 
             // Eerst vaste plaatsen toewijzen
@@ -399,7 +411,9 @@
                 const group = document.createElement('div');
                 group.className = 'seat-group';
                 for (let i = 0; i < size; i++) {
-                    group.appendChild(this.createSeatElement(seating[currentIndex], currentIndex, layout));
+                    if (currentIndex < seating.length) {
+                        group.appendChild(this.createSeatElement(seating[currentIndex], currentIndex, layout));
+                    }
                     currentIndex++;
                 }
                 rowDiv.appendChild(group);
@@ -409,16 +423,34 @@
         }
 
         render() {
+            const customConfig = this.state.customLayoutConfig;
             const layoutConfigs = {
                 '232': { groupSizes: [2,3,2], rows: 5, seatsPerRow: 7 },
                 '222': { groupSizes: [2,2,2], rows: 6, seatsPerRow: 6 },
-                '33': { groupSizes: [3,3], rows: 6, seatsPerRow: 6 }
+                '33': { groupSizes: [3,3], rows: 6, seatsPerRow: 6 },
+                'custom': {
+                    groupSizes: customConfig.groupSizes || [],
+                    rows: customConfig.rows || 0,
+                    seatsPerRow: (customConfig.groupSizes || []).reduce((a, b) => a + b, 0)
+                }
             };
 
-            ['232', '222', '33'].forEach(layout => {
+            Object.keys(layoutConfigs).forEach(layout => {
                 const seating = this.generateLayout(layout);
                 const plan = document.getElementById(`seatingPlan${layout}`);
+                if (!plan) return;
+                
                 plan.innerHTML = '';
+
+                // Add wide-layout class if necessary
+                const config = layoutConfigs[layout];
+                if (layout === 'custom') {
+                    if (config.seatsPerRow > 8) { // Threshold for wide layout
+                        plan.classList.add('wide-layout');
+                    } else {
+                        plan.classList.remove('wide-layout');
+                    }
+                }
 
                 // Voeg docentenbureau toe
                 const teacherDesk = document.createElement('div');
@@ -429,14 +461,18 @@
                 teacherDesk.appendChild(teacherSeat);
                 plan.appendChild(teacherDesk);
 
-                const config = layoutConfigs[layout];
+                if (config.seatsPerRow === 0) return;
+
                 for (let row = 0; row < config.rows; row++) {
                     const rowContainer = document.createElement('div');
                     rowContainer.className = 'row-container';
-                    rowContainer.appendChild(
-                        this.createRowGroup(seating, row * config.seatsPerRow, config.groupSizes, layout)
-                    );
-                    plan.appendChild(rowContainer);
+                    const startIndex = row * config.seatsPerRow;
+                    if (startIndex < seating.length) {
+                        rowContainer.appendChild(
+                            this.createRowGroup(seating, startIndex, config.groupSizes, layout)
+                        );
+                        plan.appendChild(rowContainer);
+                    }
                 }
             });
         }
@@ -474,7 +510,13 @@
         }
 
         setActiveTab(tabId) {
-            document.getElementById(`tab${tabId}`).click();
+            const tabButton = document.getElementById(`tab${tabId}`);
+            if (tabButton) {
+                tabButton.click();
+            } else {
+                // Fallback to the first tab if the saved one doesn't exist
+                document.querySelector('.tab-button').click();
+            }
         }
     }
 
@@ -509,7 +551,11 @@
                 const button = document.getElementById('screenshotBtn');
                 button.disabled = true;
                 try {
-                    const activeLayout = document.querySelector('.tab-content.active');
+                    const activeLayout = document.querySelector('.tab-content.active .seating-plan');
+                    if (!activeLayout) {
+                        this.notifications.error('Geen actieve plattegrond gevonden.');
+                        return;
+                    }
                     const canvas = await html2canvas(activeLayout, {
                         backgroundColor: getComputedStyle(document.body).getPropertyValue('--bg-color'),
                         scale: 3,
@@ -563,6 +609,11 @@
                     this.state.saveToStorage();
                     this.notifications.success(`Thema kleur gewijzigd naar ${theme}`);
                 });
+            });
+
+            // Custom layout controls
+            document.getElementById('applyCustomLayoutBtn').addEventListener('click', () => {
+                this.applyCustomLayout();
             });
 
             // Initialize color theme
@@ -623,7 +674,7 @@
             document.querySelectorAll('.fixed-seat-input').forEach(input => {
                 const name = input.querySelector('.fixed-name').value.trim();
                 const position = parseInt(input.querySelector('.fixed-position').value);
-                if (name && position && position >= 1 && position <= 35) {
+                if (name && position && position >= 1 && position <= 40) {
                     this.state.fixedSeats.set(name, position - 1);
                 }
             });
@@ -636,9 +687,26 @@
                 return;
             }
             
-            this.state.layouts = { '232': [], '222': [], '33': [] };
+            this.state.layouts = { '232': [], '222': [], '33': [], 'custom': [] };
             this.seatingGenerator.render();
             this.notifications.success('Nieuwe opstelling gegenereerd');
+        }
+
+        applyCustomLayout() {
+            const rows = parseInt(document.getElementById('customRows').value);
+            const groupSizesStr = document.getElementById('customGroupSizes').value;
+            const groupSizes = groupSizesStr.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n) && n > 0);
+
+            if (!rows || rows <= 0 || groupSizes.length === 0) {
+                this.notifications.error('Ongeldige invoer voor custom layout.');
+                return;
+            }
+
+            this.state.customLayoutConfig = { rows, groupSizes };
+            this.state.layouts.custom = []; // Reset the layout
+            this.seatingGenerator.render();
+            this.notifications.success('Custom layout toegepast');
+            this.state.saveToStorage();
         }
 
         saveState() {
@@ -663,45 +731,33 @@
         const seatingGenerator = new SeatingGenerator(state);
         const tabManager = new TabManager(state);
         const listManager = new ListManager(state, notifications);
-        const eventHandlers = new EventHandlers(state, notifications, seatingGenerator, tabManager);
+        new EventHandlers(state, notifications, seatingGenerator, tabManager);
 
         // Load saved state
         if (state.loadFromStorage()) {
             document.getElementById('studentNames').value = state.students.join('\n');
+            document.getElementById('customRows').value = state.customLayoutConfig.rows;
+            document.getElementById('customGroupSizes').value = state.customLayoutConfig.groupSizes.join(',');
 
             if (state.darkMode) {
                 document.body.classList.add('dark-mode');
             }
 
+            // Re-create fixed seat inputs from loaded state
+            const fixedSeatContainer = document.getElementById('fixedSeatsContainer');
             state.fixedSeats.forEach((seatNumber, studentName) => {
-                const container = document.getElementById('fixedSeatsContainer');
                 const template = document.getElementById('fixedSeatTemplate');
                 const clone = template.content.cloneNode(true);
-                
-                const nameInput = clone.querySelector('.fixed-name');
-                const positionInput = clone.querySelector('.fixed-position');
-                const removeBtn = clone.querySelector('.remove-fixed');
-                
-                nameInput.value = studentName;
-                positionInput.value = seatNumber + 1;
-                
-                removeBtn.addEventListener('click', (e) => {
-                    e.target.closest('.fixed-seat-input').remove();
-                    eventHandlers.updateFixedSeats();
-                });
-                
-                const inputs = clone.querySelectorAll('input');
-                inputs.forEach(input => {
-                    input.addEventListener('change', () => eventHandlers.updateFixedSeats());
-                });
-                
-                container.appendChild(clone);
+                clone.querySelector('.fixed-name').value = studentName;
+                clone.querySelector('.fixed-position').value = seatNumber + 1;
+                fixedSeatContainer.appendChild(clone);
             });
 
             tabManager.setActiveTab(state.activeTab);
 
-            if (state.students.length > 0) {
-                seatingGenerator.render();
+            // Render layouts if there's data for them
+            if (Object.values(state.layouts).some(l => l && l.length > 0)) {
+                 seatingGenerator.render();
             }
 
             notifications.success('Eerdere configuratie geladen');
