@@ -299,9 +299,8 @@
     }
 
     /* Form Elements */
-    textarea {
+    textarea, input {
         width: 100%;
-        min-height: 200px;
         padding: var(--spacing-md);
         border: 1px solid var(--seat-border);
         border-radius: var(--border-radius-md);
@@ -311,14 +310,32 @@
         font-size: 1rem;
         line-height: 1.5;
         transition: border-color var(--transition-speed);
-        resize: vertical;
         margin-bottom: var(--spacing-lg);
     }
 
-    textarea:focus {
+    textarea {
+        min-height: 200px;
+        resize: vertical;
+    }
+    
+    input {
+        padding: var(--spacing-sm);
+    }
+
+    textarea:focus, input:focus {
         outline: none;
         border-color: var(--button-bg);
         box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+    }
+
+    .form-group {
+        margin-bottom: var(--spacing-md);
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: var(--spacing-sm);
+        font-weight: 500;
     }
 /* Tab Styling */
     .tabs {
@@ -335,6 +352,7 @@
         list-style: none;
         padding: 0;
         margin: 0;
+        flex-wrap: wrap;
     }
 
     .tab-button {
@@ -383,6 +401,7 @@
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         position: relative;
         z-index: 1;
+        overflow-x: auto; /* Zorgt voor scrollen bij extreme breedte */
     }
 
     .dark-mode .layout-container {
@@ -653,6 +672,24 @@
         width: 80px;
     }
 
+    /* Custom Layout Controls */
+    .custom-layout-controls {
+        display: flex;
+        gap: var(--spacing-lg);
+        align-items: flex-end;
+        margin-bottom: var(--spacing-lg);
+        flex-wrap: wrap;
+    }
+
+    .custom-layout-controls .form-group {
+        flex: 1;
+        min-width: 150px;
+    }
+    
+    .custom-layout-controls button {
+        margin-bottom: var(--spacing-lg); /* Align with input fields */
+    }
+
     /* Responsive Design */
     @media (max-width: 768px) {
         body {
@@ -819,4 +856,26 @@
 
     .color-button.active {
         border-color: var(--button-bg);
+    }
+
+    /* ====== NIEUWE STIJLEN VOOR BREDE OPSTELLINGEN ====== */
+    .seating-plan.wide-layout .group-container {
+        justify-content: center; /* Plaats de groepen in het midden */
+        gap: var(--spacing-sm); /* Verklein de ruimte TUSSEN de groepen */
+    }
+
+    .seating-plan.wide-layout .seat-group {
+        gap: var(--spacing-xs); /* Verklein de ruimte IN een groep */
+        padding: var(--spacing-sm); /* Verklein de opvulling van een groep */
+    }
+
+    .seating-plan.wide-layout .seat {
+        min-width: 75px; /* Maak de stoeltjes (tafels) smaller */
+        min-height: 50px;
+        font-size: 0.8rem; /* Maak de tekst iets kleiner */
+        padding: var(--spacing-xs);
+    }
+
+    .seating-plan.wide-layout .seat-number {
+        font-size: 0.6rem;
     }
