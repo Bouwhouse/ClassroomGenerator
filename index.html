@@ -27,8 +27,8 @@
         <main>
 <section class="form-group" id="studentInput">
                 <label for="studentNames">Voer de namen van de leerlingen in (één naam per regel):</label>
-                <textarea 
-                    id="studentNames" 
+                <textarea
+                    id="studentNames"
                     name="studentNames"
                     placeholder="Jan Janssen&#10;Piet Pietersen&#10;Marie de Vries"
                     aria-label="Namen van leerlingen"
@@ -39,9 +39,8 @@
             <section class="fixed-seats-section">
                 <h2>Vaste plaatsen toewijzen</h2>
                 <div id="fixedSeatsContainer">
-                    <!-- Dynamisch gegenereerde vaste plaatsen komen hier -->
-                </div>
-                <button 
+                    </div>
+                <button
                     id="addFixedSeatBtn"
                     class="button button-secondary"
                     aria-label="Voeg een nieuwe vaste plaats toe">
@@ -50,20 +49,20 @@
             </section>
 
             <section class="controls">
-                <button 
-                    id="generateBtn" 
+                <button
+                    id="generateBtn"
                     class="button button-primary"
                     aria-label="Genereer nieuwe klasopstellingen">
                     Genereer Opstellingen
                 </button>
-                <button 
-                    id="saveBtn" 
+                <button
+                    id="saveBtn"
                     class="button button-secondary"
                     aria-label="Sla huidige configuratie op">
                     Opslaan
                 </button>
-                <button 
-                    id="screenshotBtn" 
+                <button
+                    id="screenshotBtn"
                     class="button button-secondary"
                     aria-label="Download plattegrond als afbeelding">
                     Download Plattegrond
@@ -74,7 +73,7 @@
                 <div class="tabs">
                     <ul class="tab-list" role="tablist">
                         <li role="presentation">
-                            <button id="tab222" class="tab-button active" role="tab" 
+                            <button id="tab222" class="tab-button active" role="tab"
                                     aria-selected="true" aria-controls="content222">
                                 2-2-2 Opstelling
                             </button>
@@ -89,6 +88,12 @@
                             <button id="tab33" class="tab-button" role="tab"
                                     aria-selected="false" aria-controls="content33">
                                 3-3 Opstelling
+                            </button>
+                        </li>
+                        <li role="presentation">
+                            <button id="tabcustom" class="tab-button" role="tab"
+                                    aria-selected="false" aria-controls="contentcustom">
+                                Custom Opstelling
                             </button>
                         </li>
                     </ul>
@@ -106,6 +111,22 @@
                 <div id="content33" class="tab-content layout-container" role="tabpanel" aria-labelledby="tab33">
                     <h3>3-3 Opstelling</h3>
                     <div id="seatingPlan33" class="seating-plan" aria-label="3-3 klasopstelling"></div>
+                </div>
+
+                <div id="contentcustom" class="tab-content layout-container" role="tabpanel" aria-labelledby="tabcustom">
+                    <h3>Custom Opstelling</h3>
+                    <div class="custom-layout-controls">
+                        <div class="form-group">
+                            <label for="customRows">Aantal rijen:</label>
+                            <input type="number" id="customRows" min="1" max="10" value="5">
+                        </div>
+                        <div class="form-group">
+                            <label for="customGroupSizes">Groepsindeling (bv. 2,3,2):</label>
+                            <input type="text" id="customGroupSizes" placeholder="bv. 2,2,2" value="2,3,2">
+                        </div>
+                        <button id="applyCustomLayoutBtn" class="button button-secondary">Pas Layout Toe</button>
+                    </div>
+                    <div id="seatingPlancustom" class="seating-plan" aria-label="Custom klasopstelling"></div>
                 </div>
             </section>
                       <section class="list-management collapsed">
@@ -128,7 +149,7 @@
                         </button>
                     </div>
                     <div class="save-list-form">
-                        <input type="text" id="listName" placeholder="Geef deze lijst een naam" 
+                        <input type="text" id="listName" placeholder="Geef deze lijst een naam"
                                aria-label="Naam voor nieuwe lijst">
                         <button id="saveListBtn" class="button button-primary">
                             Sla Lijst Op
@@ -143,19 +164,16 @@
         </footer>
     </div>
 
-    <!-- Dark Mode Toggle Button -->
     <button id="darkModeToggle" class="theme-toggle" aria-label="Schakel tussen licht en donker thema">
         🌓
     </button>
 
-    <!-- Notifications container -->
     <div id="notificationContainer" class="notification-container" role="alert" aria-live="polite"></div>
 
-    <!-- Template voor vaste plaats invoer -->
     <template id="fixedSeatTemplate">
         <div class="fixed-seat-input">
             <input type="text" placeholder="Naam leerling" class="fixed-name" required>
-            <input type="number" min="1" max="35" placeholder="Plaats #" class="fixed-position" required>
+            <input type="number" min="1" max="40" placeholder="Plaats #" class="fixed-position" required>
             <button class="button button-danger remove-fixed" aria-label="Verwijder deze vaste plaats">X</button>
         </div>
     </template>
