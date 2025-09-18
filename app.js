@@ -3,6 +3,7 @@
         constructor() {
             this.students = [];
             this.fixedSeats = new Map();
+            this.separatedPairs = [];
             this.layouts = {
                 '232': [],
                 '222': [],
@@ -23,6 +24,7 @@
             const data = {
                 students: this.students,
                 fixedSeats: Array.from(this.fixedSeats.entries()),
+                separatedPairs: this.separatedPairs,
                 darkMode: this.darkMode,
                 activeTab: this.activeTab,
                 layouts: this.layouts,
@@ -38,6 +40,7 @@
             if (data) {
                 this.students = data.students || [];
                 this.fixedSeats = new Map(data.fixedSeats || []);
+                this.separatedPairs = data.separatedPairs || [];
                 this.darkMode = data.darkMode || false;
                 this.activeTab = data.activeTab || '222';
                 this.layouts = data.layouts || { '232': [], '222': [], '33': [], 'custom': [] };
@@ -56,7 +59,8 @@
             
             const listData = {
                 students: this.students,
-                fixedSeats: Array.from(this.fixedSeats.entries())
+                fixedSeats: Array.from(this.fixedSeats.entries()),
+                separatedPairs: this.separatedPairs
             };
             
             this.savedLists.set(name, listData);
@@ -71,6 +75,7 @@
             
             this.students = listData.students;
             this.fixedSeats = new Map(listData.fixedSeats);
+            this.separatedPairs = listData.separatedPairs || [];
             // Reset layouts wanneer een nieuwe lijst wordt geladen
             this.layouts = { '232': [], '222': [], '33': [], 'custom': [] };
             this.saveToStorage();
@@ -234,50 +239,42 @@
             document.getElementById('studentNames').value = this.state.students.join('\n');
 
             // Update fixed seats
-            const container = document.getElementById('fixedSeatsContainer');
-            container.innerHTML = '';
-            
+            const fixedContainer = document.getElementById('fixedSeatsContainer');
+            fixedContainer.innerHTML = '';
             this.state.fixedSeats.forEach((seatNumber, studentName) => {
-                const template = document.getElementById('fixedSeatTemplate');
-                const clone = template.content.cloneNode(true);
-                
-                const nameInput = clone.querySelector('.fixed-name');
-                const positionInput = clone.querySelector('.fixed-position');
-                
-                nameInput.value = studentName;
-                positionInput.value = seatNumber + 1;
-                
-                const removeBtn = clone.querySelector('.remove-fixed');
-                removeBtn.addEventListener('click', (e) => {
-                    e.target.closest('.fixed-seat-input').remove();
-                    this.updateFixedSeats();
-                });
-                
-                const inputs = clone.querySelectorAll('input');
-                inputs.forEach(input => {
-                    input.addEventListener('change', () => this.updateFixedSeats());
-                });
-                
-                container.appendChild(clone);
+                this.addFixedSeatInput(studentName, seatNumber + 1);
             });
-        }
 
-        updateFixedSeats() {
-            this.state.fixedSeats.clear();
-            document.querySelectorAll('.fixed-seat-input').forEach(input => {
-                const name = input.querySelector('.fixed-name').value.trim();
-                const position = parseInt(input.querySelector('.fixed-position').value);
-                if (name && position && position >= 1 && position <= 40) {
-                    this.state.fixedSeats.set(name, position - 1);
-                }
+            // Update separated pairs
+            const separatedContainer = document.getElementById('separatedPairsContainer');
+            separatedContainer.innerHTML = '';
+            this.state.separatedPairs.forEach(pair => {
+                this.addSeparatedPairInput(pair[0], pair[1]);
             });
-            this.state.saveToStorage();
         }
     }
+
 // SeatingGenerator class
     class SeatingGenerator {
-        constructor(state) {
+        constructor(state, notifications) {
             this.state = state;
+            this.notifications = notifications;
+            this.layoutConfigs = {};
+        }
+
+        _getLayoutConfigs() {
+            const customConfig = this.state.customLayoutConfig;
+            this.layoutConfigs = {
+                '232': { groupSizes: [2,3,2], rows: 5, seatsPerRow: 7 },
+                '222': { groupSizes: [2,2,2], rows: 6, seatsPerRow: 6 },
+                '33': { groupSizes: [3,3], rows: 6, seatsPerRow: 6 },
+                'custom': {
+                    groupSizes: customConfig.groupSizes || [],
+                    rows: customConfig.rows || 0,
+                    seatsPerRow: (customConfig.groupSizes || []).reduce((a, b) => a + b, 0)
+                }
+            };
+            return this.layoutConfigs;
         }
 
         // Fisher-Yates shuffle implementation
@@ -289,36 +286,99 @@
             }
             return shuffled;
         }
+        
+        getNeighbors(index, layoutType) {
+            const config = this.layoutConfigs[layoutType];
+            if (!config) return [];
+            
+            const { seatsPerRow, groupSizes } = config;
+            const maxSeats = config.rows * seatsPerRow;
+            const neighbors = [];
+
+            const col = index % seatsPerRow;
+
+            // Directe buren (boven, onder)
+            const top = index - seatsPerRow;
+            const bottom = index + seatsPerRow;
+
+            if (top >= 0) neighbors.push(top);
+            if (bottom < maxSeats) neighbors.push(bottom);
+            
+            // Links, Rechts, en Diagonaal (binnen dezelfde visuele groep)
+            let currentPosInRow = 0;
+            for (const size of groupSizes) {
+                const startOfGroup = currentPosInRow;
+                const endOfGroup = currentPosInRow + size - 1;
+                
+                if (col >= startOfGroup && col <= endOfGroup) {
+                    const isNotFirstColOfGroup = col > startOfGroup;
+                    const isNotLastColOfGroup = col < endOfGroup;
+
+                    // Links & Rechts
+                    if (isNotFirstColOfGroup) neighbors.push(index - 1);
+                    if (isNotLastColOfGroup) neighbors.push(index + 1);
+
+                    // Diagonale buren
+                    if (top >= 0) {
+                        if (isNotFirstColOfGroup) neighbors.push(top - 1); // Schuin linksboven
+                        if (isNotLastColOfGroup) neighbors.push(top + 1);  // Schuin rechtsboven
+                    }
+                    if (bottom < maxSeats) {
+                        if (isNotFirstColOfGroup) neighbors.push(bottom - 1); // Schuin linksonder
+                        if (isNotLastColOfGroup) neighbors.push(bottom + 1);  // Schuin rechtsonder
+                    }
+                    break;
+                }
+                currentPosInRow += size;
+            }
+            return neighbors;
+        }
+
 
         generateLayout(type) {
-            // Als er al een layout bestaat voor dit type, gebruik die
             if (this.state.layouts[type] && this.state.layouts[type].length > 0) {
                 return this.state.layouts[type];
             }
 
-            const customConfig = this.state.customLayoutConfig;
-            const customSeatsPerRow = (customConfig.groupSizes && customConfig.groupSizes.length > 0)
-                ? customConfig.groupSizes.reduce((a, b) => a + b, 0)
-                : 0;
+            const MAX_ATTEMPTS = 500;
+            for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+                let seating = this._attemptPlacement(type);
+                let violations = this._findViolations(seating, type);
 
-            const layouts = {
-                '232': { maxSeats: 35 },
-                '222': { maxSeats: 32 },
-                '33': { maxSeats: 36 },
-                'custom': { maxSeats: (customConfig.rows || 0) * customSeatsPerRow }
-            };
+                if (violations.length === 0) {
+                    this.state.layouts[type] = seating;
+                    return seating;
+                }
 
-            const { maxSeats } = layouts[type];
+                // Probeer de schendingen op te lossen door te ruilen
+                for (const violation of violations) {
+                    seating = this._fixViolation(violation, seating);
+                }
+                
+                // Controleer opnieuw na de fix-pogingen
+                if (this._findViolations(seating, type).length === 0) {
+                     this.state.layouts[type] = seating;
+                    return seating;
+                }
+            }
+
+            this.notifications.warning(`Kon geen opstelling vinden voor ${type} zonder schendingen. Resultaat kan onvolledig zijn.`);
+            const finalSeating = this._attemptPlacement(type); // Geef de laatste poging terug
+            this.state.layouts[type] = finalSeating;
+            return finalSeating;
+        }
+
+        _attemptPlacement(type) {
+            const config = this.layoutConfigs[type];
+            const maxSeats = config.rows * config.seatsPerRow;
             const seating = new Array(maxSeats).fill(null);
 
-            // Eerst vaste plaatsen toewijzen
             this.state.fixedSeats.forEach((seatNumber, studentName) => {
                 if (seatNumber < maxSeats) {
                     seating[seatNumber] = { name: studentName };
                 }
             });
 
-            // Overige studenten random toewijzen
             const remainingStudents = this.state.students.filter(
                 student => !this.state.fixedSeats.has(student)
             );
@@ -331,9 +391,48 @@
                     studentIndex++;
                 }
             }
+            return seating;
+        }
 
-            // Sla de layout op in state
-            this.state.layouts[type] = seating;
+        _findViolations(seating, type) {
+            const violations = [];
+            const studentMap = new Map();
+            seating.forEach((seat, index) => {
+                if (seat) studentMap.set(seat.name, index);
+            });
+
+            if (studentMap.size === 0) return [];
+            
+            for (const pair of this.state.separatedPairs) {
+                const [name1, name2] = pair;
+                if (studentMap.has(name1) && studentMap.has(name2)) {
+                    const index1 = studentMap.get(name1);
+                    const index2 = studentMap.get(name2);
+                    const neighbors1 = this.getNeighbors(index1, type);
+
+                    if (neighbors1.includes(index2)) {
+                        violations.push({ pair, indices: [index1, index2] });
+                    }
+                }
+            }
+            return violations;
+        }
+        
+        _fixViolation(violation, seating) {
+            const [indexToSwap] = violation.indices;
+            const movableStudentsIndices = [];
+            seating.forEach((seat, index) => {
+                if (seat && !this.state.fixedSeats.has(seat.name)) {
+                    movableStudentsIndices.push(index);
+                }
+            });
+            
+            const randomIndexToSwapWith = movableStudentsIndices[Math.floor(Math.random() * movableStudentsIndices.length)];
+
+            if (randomIndexToSwapWith !== undefined) {
+                [seating[indexToSwap], seating[randomIndexToSwapWith]] = [seating[randomIndexToSwapWith], seating[indexToSwap]];
+            }
+            
             return seating;
         }
 
@@ -423,17 +522,7 @@
         }
 
         render() {
-            const customConfig = this.state.customLayoutConfig;
-            const layoutConfigs = {
-                '232': { groupSizes: [2,3,2], rows: 5, seatsPerRow: 7 },
-                '222': { groupSizes: [2,2,2], rows: 6, seatsPerRow: 6 },
-                '33': { groupSizes: [3,3], rows: 6, seatsPerRow: 6 },
-                'custom': {
-                    groupSizes: customConfig.groupSizes || [],
-                    rows: customConfig.rows || 0,
-                    seatsPerRow: (customConfig.groupSizes || []).reduce((a, b) => a + b, 0)
-                }
-            };
+            const layoutConfigs = this._getLayoutConfigs();
 
             Object.keys(layoutConfigs).forEach(layout => {
                 const seating = this.generateLayout(layout);
@@ -522,11 +611,12 @@
 
     // EventHandlers class
     class EventHandlers {
-        constructor(state, notifications, seatingGenerator, tabManager) {
+        constructor(state, notifications, seatingGenerator, tabManager, listManager) {
             this.state = state;
             this.notifications = notifications;
             this.seatingGenerator = seatingGenerator;
             this.tabManager = tabManager;
+            this.listManager = listManager;
             this.setupEventListeners();
         }
 
@@ -587,6 +677,11 @@
             // Add Fixed Seat Button
             document.getElementById('addFixedSeatBtn').addEventListener('click', () => {
                 this.addFixedSeatInput();
+            });
+            
+             // Add Separated Pair Button
+            document.getElementById('addSeparatedPairBtn').addEventListener('click', () => {
+                this.addSeparatedPairInput();
             });
 
             // Student Names Input
@@ -650,11 +745,14 @@
             this.state.saveToStorage();
         }
 
-        addFixedSeatInput() {
+        addFixedSeatInput(name = '', position = '') {
             const container = document.getElementById('fixedSeatsContainer');
             const template = document.getElementById('fixedSeatTemplate');
             const clone = template.content.cloneNode(true);
             
+            clone.querySelector('.fixed-name').value = name;
+            clone.querySelector('.fixed-position').value = position;
+
             const removeBtn = clone.querySelector('.remove-fixed');
             removeBtn.addEventListener('click', (e) => {
                 e.target.closest('.fixed-seat-input').remove();
@@ -680,6 +778,41 @@
             });
             this.state.saveToStorage();
         }
+        
+        addSeparatedPairInput(name1 = '', name2 = '') {
+            const container = document.getElementById('separatedPairsContainer');
+            const template = document.getElementById('separatedPairTemplate');
+            const clone = template.content.cloneNode(true);
+
+            clone.querySelector('.separated-name1').value = name1;
+            clone.querySelector('.separated-name2').value = name2;
+            
+            const removeBtn = clone.querySelector('.remove-separated-pair');
+            removeBtn.addEventListener('click', (e) => {
+                e.target.closest('.separated-pair-input').remove();
+                this.updateSeparatedPairs();
+            });
+
+            const inputs = clone.querySelectorAll('input');
+            inputs.forEach(input => {
+                input.addEventListener('change', () => this.updateSeparatedPairs());
+            });
+
+            container.appendChild(clone);
+        }
+        
+        updateSeparatedPairs() {
+            this.state.separatedPairs = [];
+            document.querySelectorAll('.separated-pair-input').forEach(input => {
+                const name1 = input.querySelector('.separated-name1').value.trim();
+                const name2 = input.querySelector('.separated-name2').value.trim();
+                if (name1 && name2) {
+                    this.state.separatedPairs.push([name1, name2]);
+                }
+            });
+            this.state.saveToStorage();
+        }
+
 
         generateSeating() {
             if (this.state.students.length === 0) {
@@ -728,10 +861,27 @@
         const state = new State();
         const notifications = new NotificationSystem();
         window.notifications = notifications; // Make notifications globally available
-        const seatingGenerator = new SeatingGenerator(state);
+        const seatingGenerator = new SeatingGenerator(state, notifications);
         const tabManager = new TabManager(state);
         const listManager = new ListManager(state, notifications);
-        new EventHandlers(state, notifications, seatingGenerator, tabManager);
+        const eventHandlers = new EventHandlers(state, notifications, seatingGenerator, tabManager, listManager);
+        listManager.updateUI = eventHandlers.addFixedSeatInput.bind(eventHandlers);
+        listManager.updateUI = eventHandlers.addSeparatedPairInput.bind(eventHandlers);
+        listManager.updateUI = function() {
+             document.getElementById('studentNames').value = state.students.join('\n');
+
+            const fixedContainer = document.getElementById('fixedSeatsContainer');
+            fixedContainer.innerHTML = '';
+            state.fixedSeats.forEach((seatNumber, studentName) => {
+                eventHandlers.addFixedSeatInput(studentName, seatNumber + 1);
+            });
+
+            const separatedContainer = document.getElementById('separatedPairsContainer');
+            separatedContainer.innerHTML = '';
+            state.separatedPairs.forEach(pair => {
+                eventHandlers.addSeparatedPairInput(pair[0], pair[1]);
+            });
+        };
 
         // Load saved state
         if (state.loadFromStorage()) {
@@ -742,16 +892,8 @@
             if (state.darkMode) {
                 document.body.classList.add('dark-mode');
             }
-
-            // Re-create fixed seat inputs from loaded state
-            const fixedSeatContainer = document.getElementById('fixedSeatsContainer');
-            state.fixedSeats.forEach((seatNumber, studentName) => {
-                const template = document.getElementById('fixedSeatTemplate');
-                const clone = template.content.cloneNode(true);
-                clone.querySelector('.fixed-name').value = studentName;
-                clone.querySelector('.fixed-position').value = seatNumber + 1;
-                fixedSeatContainer.appendChild(clone);
-            });
+            
+            listManager.updateUI();
 
             tabManager.setActiveTab(state.activeTab);
 
