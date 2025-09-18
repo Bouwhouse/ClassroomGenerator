@@ -36,17 +36,31 @@
                 ></textarea>
             </section>
 
-            <section class="fixed-seats-section">
-                <h2>Vaste plaatsen toewijzen</h2>
-                <div id="fixedSeatsContainer">
-                    </div>
-                <button
-                    id="addFixedSeatBtn"
-                    class="button button-secondary"
-                    aria-label="Voeg een nieuwe vaste plaats toe">
-                    Voeg vaste plaats toe
-                </button>
-            </section>
+            <div class="seating-rules">
+                <section class="fixed-seats-section">
+                    <h2>Vaste plaatsen toewijzen</h2>
+                    <div id="fixedSeatsContainer">
+                        </div>
+                    <button
+                        id="addFixedSeatBtn"
+                        class="button button-secondary"
+                        aria-label="Voeg een nieuwe vaste plaats toe">
+                        Voeg vaste plaats toe
+                    </button>
+                </section>
+
+                <section class="separated-pairs-section">
+                    <h2>Leerlingen scheiden</h2>
+                    <div id="separatedPairsContainer">
+                        </div>
+                    <button
+                        id="addSeparatedPairBtn"
+                        class="button button-secondary"
+                        aria-label="Voeg een nieuw scheidingspaar toe">
+                        Voeg scheidingspaar toe
+                    </button>
+                </section>
+            </div>
 
             <section class="controls">
                 <button
@@ -175,6 +189,15 @@
             <input type="text" placeholder="Naam leerling" class="fixed-name" required>
             <input type="number" min="1" max="40" placeholder="Plaats #" class="fixed-position" required>
             <button class="button button-danger remove-fixed" aria-label="Verwijder deze vaste plaats">X</button>
+        </div>
+    </template>
+    
+    <template id="separatedPairTemplate">
+        <div class="separated-pair-input">
+            <input type="text" placeholder="Naam leerling 1" class="separated-name1" required>
+            <span class="separator">&harr;</span>
+            <input type="text" placeholder="Naam leerling 2" class="separated-name2" required>
+            <button class="button button-danger remove-separated-pair" aria-label="Verwijder dit scheidingspaar">X</button>
         </div>
     </template>
 
