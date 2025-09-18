@@ -135,6 +135,14 @@
         background-color: var(--button-bg);
         border-radius: var(--border-radius-sm);
     }
+
+    .seating-rules {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: var(--spacing-lg);
+        margin-bottom: var(--spacing-xl);
+    }
+
 /* Styles voor lijstbeheer */
     .list-management {
         margin-bottom: var(--spacing-xl);
@@ -633,29 +641,29 @@
         background-color: var(--button-hover);
     }
 
-    /* Fixed Seats Section */
-    .fixed-seats-section {
-        margin-bottom: var(--spacing-xl);
+    /* Fixed Seats & Separated Pairs Sections */
+    .fixed-seats-section, .separated-pairs-section {
         background-color: var(--bg-color);
         backdrop-filter: blur(4px);
         padding: var(--spacing-md);
         border-radius: var(--border-radius-md);
         position: relative;
         z-index: 1;
+        border: 1px solid var(--seat-border);
     }
 
-    .dark-mode .fixed-seats-section {
+    .dark-mode .fixed-seats-section, .dark-mode .separated-pairs-section {
         background-color: var(--bg-color);
     }
 
-    .fixed-seat-input {
+    .fixed-seat-input, .separated-pair-input {
         display: flex;
-        gap: var(--spacing-md);
+        gap: var(--spacing-sm);
         margin-bottom: var(--spacing-md);
         align-items: center;
     }
 
-    .fixed-seat-input input {
+    .fixed-seat-input input, .separated-pair-input input {
         padding: var(--spacing-sm);
         border: 1px solid var(--seat-border);
         border-radius: var(--border-radius-sm);
@@ -665,11 +673,18 @@
 
     .fixed-seat-input input[type="text"] {
         flex: 1;
-        min-width: 200px;
+    }
+
+    .separated-pair-input input {
+        flex: 1;
     }
 
     .fixed-seat-input input[type="number"] {
         width: 80px;
+    }
+    
+    .separated-pair-input .separator {
+        font-weight: bold;
     }
 
     /* Custom Layout Controls */
@@ -691,6 +706,12 @@
     }
 
     /* Responsive Design */
+    @media (max-width: 900px) {
+        .seating-rules {
+            grid-template-columns: 1fr;
+        }
+    }
+    
     @media (max-width: 768px) {
         body {
             padding: var(--spacing-sm);
@@ -700,26 +721,13 @@
             padding: var(--spacing-md);
         }
 
-        .list-controls {
-            flex-direction: column;
-        }
-
-        .save-list-form {
-            flex-direction: column;
-            width: 100%;
-        }
-
-        .save-list-form input,
-        .list-select {
-            width: 100%;
-        }
-
-        .fixed-seat-input {
+        .list-controls, .save-list-form, .fixed-seat-input, .separated-pair-input {
             flex-direction: column;
             align-items: stretch;
+            width: 100%;
         }
 
-        .fixed-seat-input input[type="number"] {
+        .save-list-form input, .list-select, .fixed-seat-input input, .separated-pair-input input {
             width: 100%;
         }
 
@@ -843,7 +851,7 @@
     }
 
     /* Fixed Seat Input */
-    .fixed-seat-input input {
+    .fixed-seat-input input, .separated-pair-input input {
         background-color: var(--input-bg);
         color: var(--input-text);
         border: 1px solid var(--input-border);
@@ -858,7 +866,7 @@
         border-color: var(--button-bg);
     }
 
-    /* ====== NIEUWE STIJLEN VOOR BREDE OPSTELLINGEN ====== */
+    /* Responsive adjustments for wide layouts */
     .seating-plan.wide-layout .group-container {
         justify-content: center; /* Plaats de groepen in het midden */
         gap: var(--spacing-sm); /* Verklein de ruimte TUSSEN de groepen */
