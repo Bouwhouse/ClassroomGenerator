@@ -6,6 +6,9 @@
   <title>Klasopstelling Generator</title>
   <meta name="description" content="Maak snel en eenvoudig klasopstellingen. Genereer willekeurige indelingen, stel vaste plaatsen in en scheid leerlingen met drag & drop.">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🪑</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600&display=swap">
   <link rel="stylesheet" href="style.css">
   <script src="html2canvas.min.js"></script>
 </head>
@@ -108,7 +111,7 @@
                         <li role="presentation">
                             <button id="tabcustom" class="tab-button" role="tab"
                                     aria-selected="false" aria-controls="contentcustom">
-                                Custom Opstelling
+                                Eigen Opstelling
                             </button>
                         </li>
                         <li role="presentation">
@@ -139,13 +142,19 @@
                     <div class="freeform-toolbar">
                         <button id="addFreeformGroupBtn" class="button button-secondary">+ Voeg tafel toe</button>
                         <button id="generateFreeformBtn" class="button button-secondary">↺ Herverdeel leerlingen</button>
-                        <span class="freeform-hint-text">Sleep tafels naar de gewenste plek. Gebruik − / + om het aantal stoelen per tafel aan te passen.</span>
+                        <div class="zoom-controls">
+                            <button id="freeformZoomOut" class="button button-secondary zoom-btn" title="Uitzoomen">−</button>
+                            <span id="freeformZoomLevel" class="zoom-label">100%</span>
+                            <button id="freeformZoomIn" class="button button-secondary zoom-btn" title="Inzoomen">+</button>
+                            <button id="freeformZoomReset" class="button button-secondary zoom-btn" title="Zoom terugzetten">↺</button>
+                        </div>
+                        <span class="freeform-hint-text">Sleep tafels naar de gewenste plek. Download is altijd op volledige grootte.</span>
                     </div>
                     <div id="freeformCanvas" class="freeform-canvas"></div>
                 </div>
 
                 <div id="contentcustom" class="tab-content layout-container" role="tabpanel" aria-labelledby="tabcustom">
-                    <h3>Custom Opstelling</h3>
+                    <h3>Eigen Opstelling</h3>
                     <div class="custom-layout-controls">
                         <div class="form-group">
                             <label for="customRows">Aantal rijen:</label>
@@ -191,7 +200,7 @@
         </main>
 
         <footer>
-            <p>&copy; 2025 Klasopstelling Generator</p>
+            <p>&copy; 2026 Klasopstelling Generator</p>
         </footer>
     </div>
 

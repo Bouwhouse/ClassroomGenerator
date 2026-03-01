@@ -54,7 +54,14 @@ class State {
                     this.savedLists = new Map();
                 }
                 this.customLayoutConfig = data.customLayoutConfig || { rows: 5, groupSizes: [2, 3, 2] };
-                this.freeformGroups = data.freeformGroups || [];
+                this.freeformGroups = (data.freeformGroups || []).map(g => {
+                    // Migrate old format (seats) to new (rows/cols)
+                    if (g.rows === undefined || g.cols === undefined) {
+                        const seats = g.seats || 2;
+                        return { id: g.id, x: g.x || 20, y: g.y || 20, rows: seats, cols: 1 };
+                    }
+                    return g;
+                });
                 return true;
             }
         } catch (error) {
@@ -274,6 +281,7 @@ class SeatingGenerator {
         this.notifications = notifications;
         this.layoutConfigs = {};
         this.undoStack = [];
+        this.freeformZoom = 1.0;
     }
 
     updateUndoButton() {
@@ -555,7 +563,8 @@ class SeatingGenerator {
     _getFreeformGroupOffset(groupIndex) {
         let offset = 0;
         for (let i = 0; i < groupIndex; i++) {
-            offset += this.state.freeformGroups[i].seats;
+            const g = this.state.freeformGroups[i];
+            offset += g.rows * g.cols;
         }
         return offset;
     }
@@ -564,7 +573,7 @@ class SeatingGenerator {
         const groups = this.state.freeformGroups;
         if (groups.length === 0) return [];
 
-        const totalSeats = groups.reduce((sum, g) => sum + g.seats, 0);
+        const totalSeats = groups.reduce((sum, g) => sum + g.rows * g.cols, 0);
         const seating = new Array(totalSeats).fill(null);
 
         this.state.fixedSeats.forEach((seatNumber, studentName) => {
@@ -588,12 +597,19 @@ class SeatingGenerator {
         if (!canvas) return;
         canvas.innerHTML = '';
 
+        // Zoomable stage inside the canvas
+        const stage = document.createElement('div');
+        stage.id = 'freeformStage';
+        stage.className = 'freeform-stage';
+        stage.style.zoom = this.freeformZoom;
+        canvas.appendChild(stage);
+
         const groups = this.state.freeformGroups;
         if (groups.length === 0) {
             const hint = document.createElement('div');
             hint.className = 'freeform-empty-hint';
             hint.textContent = 'Voeg een tafel toe om te beginnen.';
-            canvas.appendChild(hint);
+            stage.appendChild(hint);
             return;
         }
 
@@ -609,6 +625,9 @@ class SeatingGenerator {
             groupEl.style.left = group.x + 'px';
             groupEl.style.top = group.y + 'px';
             groupEl.dataset.groupId = group.id;
+            // Width based on column count so the header fits
+            const colMinWidths = [0, 160, 280, 370];
+            groupEl.style.minWidth = (colMinWidths[group.cols] || 160) + 'px';
 
             const header = document.createElement('div');
             header.className = 'freeform-group-header';
@@ -616,30 +635,39 @@ class SeatingGenerator {
                 <span class="drag-handle" title="Sleep tafel">⠿</span>
                 <span class="group-label">Tafel ${groupIndex + 1}</span>
                 <div class="group-controls">
-                    <button class="group-seats-btn group-seats-minus" title="Minder stoelen">−</button>
-                    <span class="group-seats-count">${group.seats}</span>
-                    <button class="group-seats-btn group-seats-plus" title="Meer stoelen">+</button>
+                    <select class="group-shape-select" title="Tafelvorm">
+                        <optgroup label="Horizontaal">
+                            <option value="1x2">1×2</option>
+                            <option value="1x3">1×3</option>
+                            <option value="1x4">1×4</option>
+                            <option value="1x5">1×5</option>
+                            <option value="1x6">1×6</option>
+                        </optgroup>
+                        <optgroup label="Verticaal">
+                            <option value="2x1">2×1</option>
+                            <option value="3x1">3×1</option>
+                            <option value="4x1">4×1</option>
+                            <option value="5x1">5×1</option>
+                            <option value="6x1">6×1</option>
+                        </optgroup>
+                        <optgroup label="Raster">
+                            <option value="2x2">2×2</option>
+                            <option value="2x3">2×3</option>
+                            <option value="3x2">3×2</option>
+                        </optgroup>
+                    </select>
                     <button class="group-seats-btn remove-group" title="Verwijder tafel">✕</button>
                 </div>
             `;
-
-            header.querySelector('.group-seats-minus').addEventListener('click', (e) => {
+            header.querySelector('.group-shape-select').value = `${group.rows}x${group.cols}`;
+            header.querySelector('.group-shape-select').addEventListener('change', (e) => {
                 e.stopPropagation();
-                if (group.seats > 1) {
-                    group.seats--;
-                    this.state.layouts.freeform = [];
-                    this.state.saveToStorage();
-                    this.renderFreeform();
-                }
-            });
-            header.querySelector('.group-seats-plus').addEventListener('click', (e) => {
-                e.stopPropagation();
-                if (group.seats < 8) {
-                    group.seats++;
-                    this.state.layouts.freeform = [];
-                    this.state.saveToStorage();
-                    this.renderFreeform();
-                }
+                const [newRows, newCols] = e.target.value.split('x').map(Number);
+                group.rows = newRows;
+                group.cols = newCols;
+                this.state.layouts.freeform = [];
+                this.state.saveToStorage();
+                this.renderFreeform();
             });
             header.querySelector('.remove-group').addEventListener('click', (e) => {
                 e.stopPropagation();
@@ -649,16 +677,18 @@ class SeatingGenerator {
                 this.renderFreeform();
             });
 
+            const totalSeats = group.rows * group.cols;
             const seatsEl = document.createElement('div');
             seatsEl.className = 'freeform-group-seats';
-            for (let i = 0; i < group.seats; i++) {
+            seatsEl.style.gridTemplateColumns = `repeat(${group.cols}, 1fr)`;
+            for (let i = 0; i < totalSeats; i++) {
                 const flatIndex = offset + i;
                 seatsEl.appendChild(this.createSeatElement(seating[flatIndex] || null, flatIndex, 'freeform'));
             }
 
             groupEl.appendChild(header);
             groupEl.appendChild(seatsEl);
-            canvas.appendChild(groupEl);
+            stage.appendChild(groupEl);
             this._wireGroupDrag(groupEl, group);
         });
     }
@@ -676,8 +706,9 @@ class SeatingGenerator {
             groupEl.classList.add('dragging-group');
 
             const onMove = (e) => {
-                group.x = Math.max(0, startLeft + e.clientX - startX);
-                group.y = Math.max(0, startTop + e.clientY - startY);
+                const zoom = this.freeformZoom;
+                group.x = Math.max(0, startLeft + (e.clientX - startX) / zoom);
+                group.y = Math.max(0, startTop + (e.clientY - startY) / zoom);
                 groupEl.style.left = group.x + 'px';
                 groupEl.style.top = group.y + 'px';
             };
@@ -848,12 +879,53 @@ class EventHandlers {
         document.getElementById('screenshotBtn').addEventListener('click', async () => {
             const button = document.getElementById('screenshotBtn');
             button.disabled = true;
-            try {
-                const activeLayout = document.querySelector('.tab-content.active .seating-plan');
-                if (!activeLayout) {
-                    this.notifications.error('Geen actieve plattegrond gevonden.');
+
+            let activeLayout;
+            let freeformCanvas = null;
+            let freeformStage = null;
+            let prevStyle = null;
+
+            if (this.state.activeTab === 'freeform') {
+                freeformCanvas = document.getElementById('freeformCanvas');
+                freeformStage = document.getElementById('freeformStage');
+
+                if (!freeformStage || this.state.freeformGroups.length === 0) {
+                    this.notifications.error('Voeg eerst tafels toe.');
+                    button.disabled = false;
                     return;
                 }
+
+                // Reset zoom to 1.0 so the download is always full-size
+                prevStyle = {
+                    overflow: freeformCanvas.style.overflow,
+                    height: freeformCanvas.style.height,
+                    minWidth: freeformCanvas.style.minWidth,
+                    stageZoom: freeformStage.style.zoom
+                };
+                freeformStage.style.zoom = 1;
+
+                // Measure full extents at zoom=1
+                const groupEls = freeformStage.querySelectorAll('.freeform-group');
+                let maxBottom = 100, maxRight = 100;
+                groupEls.forEach(el => {
+                    maxBottom = Math.max(maxBottom, el.offsetTop + el.offsetHeight + 20);
+                    maxRight = Math.max(maxRight, el.offsetLeft + el.offsetWidth + 20);
+                });
+                freeformCanvas.style.overflow = 'visible';
+                freeformCanvas.style.height = maxBottom + 'px';
+                freeformCanvas.style.minWidth = maxRight + 'px';
+                activeLayout = freeformCanvas;
+            } else {
+                activeLayout = document.querySelector('.tab-content.active .seating-plan');
+            }
+
+            if (!activeLayout) {
+                this.notifications.error('Geen actieve plattegrond gevonden.');
+                button.disabled = false;
+                return;
+            }
+
+            try {
                 const canvas = await html2canvas(activeLayout, {
                     backgroundColor: getComputedStyle(document.body).getPropertyValue('--bg-color'),
                     scale: 3,
@@ -878,6 +950,14 @@ class EventHandlers {
             } catch (error) {
                 this.notifications.error('Fout bij maken screenshot: ' + error.message);
             } finally {
+                if (freeformCanvas && prevStyle) {
+                    freeformCanvas.style.overflow = prevStyle.overflow;
+                    freeformCanvas.style.height = prevStyle.height;
+                    freeformCanvas.style.minWidth = prevStyle.minWidth;
+                }
+                if (freeformStage && prevStyle) {
+                    freeformStage.style.zoom = prevStyle.stageZoom;
+                }
                 button.disabled = false;
             }
         });
@@ -922,13 +1002,40 @@ class EventHandlers {
             const n = this.state.freeformGroups.length;
             this.state.freeformGroups.push({
                 id: Date.now(),
-                x: 20 + n * 160,
-                y: 20,
-                seats: 2
+                x: 20 + (n % 4) * 180,
+                y: 20 + Math.floor(n / 4) * 160,
+                rows: 1,
+                cols: 2
             });
             this.state.layouts.freeform = [];
             this.state.saveToStorage();
             this.seatingGenerator.render('freeform');
+        });
+
+        // Freeform: zoom controls
+        const updateZoomLabel = () => {
+            document.getElementById('freeformZoomLevel').textContent =
+                Math.round(this.seatingGenerator.freeformZoom * 100) + '%';
+        };
+        document.getElementById('freeformZoomOut').addEventListener('click', () => {
+            this.seatingGenerator.freeformZoom = Math.max(0.3,
+                Math.round((this.seatingGenerator.freeformZoom - 0.1) * 10) / 10);
+            const stage = document.getElementById('freeformStage');
+            if (stage) stage.style.zoom = this.seatingGenerator.freeformZoom;
+            updateZoomLabel();
+        });
+        document.getElementById('freeformZoomIn').addEventListener('click', () => {
+            this.seatingGenerator.freeformZoom = Math.min(1.5,
+                Math.round((this.seatingGenerator.freeformZoom + 0.1) * 10) / 10);
+            const stage = document.getElementById('freeformStage');
+            if (stage) stage.style.zoom = this.seatingGenerator.freeformZoom;
+            updateZoomLabel();
+        });
+        document.getElementById('freeformZoomReset').addEventListener('click', () => {
+            this.seatingGenerator.freeformZoom = 1.0;
+            const stage = document.getElementById('freeformStage');
+            if (stage) stage.style.zoom = 1.0;
+            updateZoomLabel();
         });
 
         // Freeform: redistribute students button
