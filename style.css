@@ -677,3 +677,135 @@
     .seating-plan.wide-layout .seat-number {
         font-size: 0.6rem;
     }
+
+/* ─── Vrije Opstelling (Freeform) ─────────────────────────────────────── */
+
+.freeform-toolbar {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    flex-wrap: wrap;
+    margin-bottom: var(--spacing-md);
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: var(--group-bg);
+    border-radius: var(--border-radius-md);
+}
+
+.freeform-hint-text {
+    font-size: 0.85rem;
+    color: #666;
+    flex: 1;
+}
+
+.freeform-canvas {
+    position: relative;
+    min-height: 520px;
+    border: 2px dashed var(--seat-border);
+    border-radius: var(--border-radius-md);
+    background: var(--seat-bg);
+    overflow: auto;
+}
+
+.freeform-empty-hint {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #999;
+    font-size: 1rem;
+    text-align: center;
+    pointer-events: none;
+    white-space: nowrap;
+}
+
+.freeform-group {
+    position: absolute;
+    background: var(--bg-color);
+    border: 1px solid var(--seat-border);
+    border-radius: var(--border-radius-md);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    min-width: 150px;
+    user-select: none;
+    transition: box-shadow 0.15s;
+}
+
+.freeform-group.dragging-group {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    z-index: 10;
+    opacity: 0.92;
+}
+
+.freeform-group-header {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    padding: 5px 8px;
+    background: var(--button-bg);
+    color: white;
+    border-radius: var(--border-radius-md) var(--border-radius-md) 0 0;
+}
+
+.drag-handle {
+    cursor: grab;
+    font-size: 1.1rem;
+    line-height: 1;
+    opacity: 0.85;
+    flex-shrink: 0;
+}
+
+.drag-handle:active {
+    cursor: grabbing;
+}
+
+.group-label {
+    flex: 1;
+    font-weight: 600;
+    font-size: 0.82rem;
+    white-space: nowrap;
+}
+
+.group-controls {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+}
+
+.group-seats-btn {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    cursor: pointer;
+    border-radius: var(--border-radius-sm);
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    line-height: 1;
+    padding: 0;
+    transition: background 0.15s;
+    flex-shrink: 0;
+}
+
+.group-seats-btn:hover {
+    background: rgba(255, 255, 255, 0.35);
+}
+
+.group-seats-count {
+    font-size: 0.78rem;
+    min-width: 14px;
+    text-align: center;
+}
+
+.freeform-group-seats {
+    padding: var(--spacing-sm);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+}
+
+.freeform-group-seats .seat {
+    min-width: 130px;
+    cursor: grab;
+}

@@ -8,7 +8,8 @@ class State {
             '232': [],
             '222': [],
             '33': [],
-            'custom': []
+            'custom': [],
+            'freeform': []
         };
         this.customLayoutConfig = {
             rows: 5,
@@ -16,6 +17,7 @@ class State {
         };
         this.activeTab = '222';
         this.savedLists = new Map();
+        this.freeformGroups = [];
     }
 
     saveToStorage() {
@@ -26,7 +28,8 @@ class State {
             activeTab: this.activeTab,
             layouts: this.layouts,
             savedLists: Array.from(this.savedLists.entries()),
-            customLayoutConfig: this.customLayoutConfig
+            customLayoutConfig: this.customLayoutConfig,
+            freeformGroups: this.freeformGroups
         };
         localStorage.setItem('classroomState', JSON.stringify(data));
     }
@@ -43,13 +46,15 @@ class State {
                 this.fixedSeats = new Map(data.fixedSeats || []);
                 this.separatedPairs = data.separatedPairs || [];
                 this.activeTab = data.activeTab || '222';
-                this.layouts = data.layouts || { '232': [], '222': [], '33': [], 'custom': [] };
+                this.layouts = data.layouts || { '232': [], '222': [], '33': [], 'custom': [], 'freeform': [] };
+                if (!this.layouts.freeform) this.layouts.freeform = [];
                 if (Array.isArray(data.savedLists)) {
                     this.savedLists = new Map(data.savedLists);
                 } else {
                     this.savedLists = new Map();
                 }
                 this.customLayoutConfig = data.customLayoutConfig || { rows: 5, groupSizes: [2, 3, 2] };
+                this.freeformGroups = data.freeformGroups || [];
                 return true;
             }
         } catch (error) {
@@ -85,7 +90,7 @@ class State {
         this.fixedSeats = new Map(listData.fixedSeats);
         this.separatedPairs = listData.separatedPairs || [];
         // Reset layouts wanneer een nieuwe lijst wordt geladen
-        this.layouts = { '232': [], '222': [], '33': [], 'custom': [] };
+        this.layouts = { '232': [], '222': [], '33': [], 'custom': [], 'freeform': [] };
         this.saveToStorage();
     }
 
@@ -268,6 +273,20 @@ class SeatingGenerator {
         this.state = state;
         this.notifications = notifications;
         this.layoutConfigs = {};
+        this.undoStack = [];
+    }
+
+    updateUndoButton() {
+        const btn = document.getElementById('undoBtn');
+        if (btn) btn.disabled = this.undoStack.length === 0;
+    }
+
+    undo() {
+        if (this.undoStack.length === 0) return;
+        this.state.layouts = this.undoStack.pop();
+        this.render(this.state.activeTab);
+        this.state.saveToStorage();
+        this.updateUndoButton();
     }
 
     _getLayoutConfigs() {
@@ -491,6 +510,10 @@ class SeatingGenerator {
         const seating = this.state.layouts[layout];
         if (!seating) return;
 
+        if (this.undoStack.length >= 20) this.undoStack.shift();
+        this.undoStack.push(JSON.parse(JSON.stringify(this.state.layouts)));
+        this.updateUndoButton();
+
         [seating[sourceIndex], seating[targetIndex]] =
             [seating[targetIndex], seating[sourceIndex]];
 
@@ -529,11 +552,157 @@ class SeatingGenerator {
         return rowDiv;
     }
 
+    _getFreeformGroupOffset(groupIndex) {
+        let offset = 0;
+        for (let i = 0; i < groupIndex; i++) {
+            offset += this.state.freeformGroups[i].seats;
+        }
+        return offset;
+    }
+
+    generateFreeformAssignment() {
+        const groups = this.state.freeformGroups;
+        if (groups.length === 0) return [];
+
+        const totalSeats = groups.reduce((sum, g) => sum + g.seats, 0);
+        const seating = new Array(totalSeats).fill(null);
+
+        this.state.fixedSeats.forEach((seatNumber, studentName) => {
+            if (seatNumber < totalSeats) {
+                seating[seatNumber] = { name: studentName };
+            }
+        });
+
+        const shuffled = this.shuffle(
+            this.state.students.filter(s => !this.state.fixedSeats.has(s))
+        );
+        let i = 0;
+        for (let j = 0; j < seating.length && i < shuffled.length; j++) {
+            if (seating[j] === null) seating[j] = { name: shuffled[i++] };
+        }
+        return seating;
+    }
+
+    renderFreeform() {
+        const canvas = document.getElementById('freeformCanvas');
+        if (!canvas) return;
+        canvas.innerHTML = '';
+
+        const groups = this.state.freeformGroups;
+        if (groups.length === 0) {
+            const hint = document.createElement('div');
+            hint.className = 'freeform-empty-hint';
+            hint.textContent = 'Voeg een tafel toe om te beginnen.';
+            canvas.appendChild(hint);
+            return;
+        }
+
+        if (!this.state.layouts.freeform || this.state.layouts.freeform.length === 0) {
+            this.state.layouts.freeform = this.generateFreeformAssignment();
+        }
+        const seating = this.state.layouts.freeform;
+
+        groups.forEach((group, groupIndex) => {
+            const offset = this._getFreeformGroupOffset(groupIndex);
+            const groupEl = document.createElement('div');
+            groupEl.className = 'freeform-group';
+            groupEl.style.left = group.x + 'px';
+            groupEl.style.top = group.y + 'px';
+            groupEl.dataset.groupId = group.id;
+
+            const header = document.createElement('div');
+            header.className = 'freeform-group-header';
+            header.innerHTML = `
+                <span class="drag-handle" title="Sleep tafel">⠿</span>
+                <span class="group-label">Tafel ${groupIndex + 1}</span>
+                <div class="group-controls">
+                    <button class="group-seats-btn group-seats-minus" title="Minder stoelen">−</button>
+                    <span class="group-seats-count">${group.seats}</span>
+                    <button class="group-seats-btn group-seats-plus" title="Meer stoelen">+</button>
+                    <button class="group-seats-btn remove-group" title="Verwijder tafel">✕</button>
+                </div>
+            `;
+
+            header.querySelector('.group-seats-minus').addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (group.seats > 1) {
+                    group.seats--;
+                    this.state.layouts.freeform = [];
+                    this.state.saveToStorage();
+                    this.renderFreeform();
+                }
+            });
+            header.querySelector('.group-seats-plus').addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (group.seats < 8) {
+                    group.seats++;
+                    this.state.layouts.freeform = [];
+                    this.state.saveToStorage();
+                    this.renderFreeform();
+                }
+            });
+            header.querySelector('.remove-group').addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.state.freeformGroups.splice(groupIndex, 1);
+                this.state.layouts.freeform = [];
+                this.state.saveToStorage();
+                this.renderFreeform();
+            });
+
+            const seatsEl = document.createElement('div');
+            seatsEl.className = 'freeform-group-seats';
+            for (let i = 0; i < group.seats; i++) {
+                const flatIndex = offset + i;
+                seatsEl.appendChild(this.createSeatElement(seating[flatIndex] || null, flatIndex, 'freeform'));
+            }
+
+            groupEl.appendChild(header);
+            groupEl.appendChild(seatsEl);
+            canvas.appendChild(groupEl);
+            this._wireGroupDrag(groupEl, group);
+        });
+    }
+
+    _wireGroupDrag(groupEl, group) {
+        const handle = groupEl.querySelector('.drag-handle');
+        let startX, startY, startLeft, startTop;
+
+        handle.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            startX = e.clientX;
+            startY = e.clientY;
+            startLeft = group.x;
+            startTop = group.y;
+            groupEl.classList.add('dragging-group');
+
+            const onMove = (e) => {
+                group.x = Math.max(0, startLeft + e.clientX - startX);
+                group.y = Math.max(0, startTop + e.clientY - startY);
+                groupEl.style.left = group.x + 'px';
+                groupEl.style.top = group.y + 'px';
+            };
+
+            const onUp = () => {
+                groupEl.classList.remove('dragging-group');
+                document.removeEventListener('mousemove', onMove);
+                document.removeEventListener('mouseup', onUp);
+                this.state.saveToStorage();
+            };
+
+            document.addEventListener('mousemove', onMove);
+            document.addEventListener('mouseup', onUp);
+        });
+    }
+
     render(layoutType = null) {
         const layoutConfigs = this._getLayoutConfigs();
         const typesToRender = layoutType ? [layoutType] : [this.state.activeTab];
 
         typesToRender.forEach(layout => {
+            if (layout === 'freeform') {
+                this.renderFreeform();
+                return;
+            }
             if (!layoutConfigs[layout]) return;
             const seating = this.generateLayout(layout);
             const plan = document.getElementById(`seatingPlan${layout}`);
@@ -732,6 +901,47 @@ class EventHandlers {
         document.getElementById('applyCustomLayoutBtn').addEventListener('click', () => {
             this.applyCustomLayout();
         });
+
+        // Undo button
+        document.getElementById('undoBtn').addEventListener('click', () => {
+            this.seatingGenerator.undo();
+        });
+
+        // Ctrl+Z / Cmd+Z keyboard shortcut for undo
+        document.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+                const tag = document.activeElement.tagName;
+                if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+                e.preventDefault();
+                this.seatingGenerator.undo();
+            }
+        });
+
+        // Freeform: add group button
+        document.getElementById('addFreeformGroupBtn').addEventListener('click', () => {
+            const n = this.state.freeformGroups.length;
+            this.state.freeformGroups.push({
+                id: Date.now(),
+                x: 20 + n * 160,
+                y: 20,
+                seats: 2
+            });
+            this.state.layouts.freeform = [];
+            this.state.saveToStorage();
+            this.seatingGenerator.render('freeform');
+        });
+
+        // Freeform: redistribute students button
+        document.getElementById('generateFreeformBtn').addEventListener('click', () => {
+            if (this.state.freeformGroups.length === 0) {
+                this.notifications.error('Voeg eerst tafels toe');
+                return;
+            }
+            this.state.layouts.freeform = [];
+            this.state.saveToStorage();
+            this.seatingGenerator.render('freeform');
+            this.notifications.success('Leerlingen herverdeeld');
+        });
     }
 
     updateStudents() {
@@ -829,7 +1039,7 @@ class EventHandlers {
             return;
         }
 
-        this.state.layouts = { '232': [], '222': [], '33': [], 'custom': [] };
+        this.state.layouts = { '232': [], '222': [], '33': [], 'custom': [], 'freeform': [] };
         this.seatingGenerator.render();
         this.notifications.success('Nieuwe opstelling gegenereerd');
     }
@@ -861,7 +1071,7 @@ class EventHandlers {
         const names = shuffled.slice(0, 28);
         document.getElementById('studentNames').value = names.join('\n');
         this.state.students = names;
-        this.state.layouts = { '232': [], '222': [], '33': [], 'custom': [] };
+        this.state.layouts = { '232': [], '222': [], '33': [], 'custom': [], 'freeform': [] };
         this.state.saveToStorage();
         this.notifications.success('Testlijst geladen');
     }
@@ -882,7 +1092,9 @@ document.addEventListener('DOMContentLoaded', () => {
     window.notifications = notifications; // Make notifications globally available
     const seatingGenerator = new SeatingGenerator(state, notifications);
     const tabManager = new TabManager(state, (activeTab) => {
-        if (state.layouts[activeTab] && state.layouts[activeTab].length > 0) {
+        if (activeTab === 'freeform') {
+            seatingGenerator.render('freeform');
+        } else if (state.layouts[activeTab] && state.layouts[activeTab].length > 0) {
             seatingGenerator.render(activeTab);
         }
     });
@@ -910,7 +1122,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Update list select dropdown with loaded saved lists
     listManager.updateListSelect();
 
-    if (state.students.length > 0 || state.savedLists.size > 0) {
+    if (state.students.length > 0 || state.savedLists.size > 0 || state.freeformGroups.length > 0) {
         document.getElementById('studentNames').value = state.students.join('\n');
         document.getElementById('customRows').value = state.customLayoutConfig.rows;
         document.getElementById('customGroupSizes').value = state.customLayoutConfig.groupSizes.join(',');

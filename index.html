@@ -70,6 +70,13 @@
                     Opslaan
                 </button>
                 <button
+                    id="undoBtn"
+                    class="button button-secondary"
+                    aria-label="Maak laatste versleep ongedaan"
+                    disabled>
+                    Ongedaan maken
+                </button>
+                <button
                     id="screenshotBtn"
                     class="button button-secondary"
                     aria-label="Download plattegrond als afbeelding">
@@ -104,6 +111,12 @@
                                 Custom Opstelling
                             </button>
                         </li>
+                        <li role="presentation">
+                            <button id="tabfreeform" class="tab-button" role="tab"
+                                    aria-selected="false" aria-controls="contentfreeform">
+                                Vrije Opstelling
+                            </button>
+                        </li>
                     </ul>
                 </div>
                 <div id="content222" class="tab-content layout-container active" role="tabpanel" aria-labelledby="tab222">
@@ -119,6 +132,16 @@
                 <div id="content33" class="tab-content layout-container" role="tabpanel" aria-labelledby="tab33">
                     <h3>3-3 Opstelling</h3>
                     <div id="seatingPlan33" class="seating-plan" aria-label="3-3 klasopstelling"></div>
+                </div>
+
+                <div id="contentfreeform" class="tab-content layout-container" role="tabpanel" aria-labelledby="tabfreeform">
+                    <h3>Vrije Opstelling</h3>
+                    <div class="freeform-toolbar">
+                        <button id="addFreeformGroupBtn" class="button button-secondary">+ Voeg tafel toe</button>
+                        <button id="generateFreeformBtn" class="button button-secondary">↺ Herverdeel leerlingen</button>
+                        <span class="freeform-hint-text">Sleep tafels naar de gewenste plek. Gebruik − / + om het aantal stoelen per tafel aan te passen.</span>
+                    </div>
+                    <div id="freeformCanvas" class="freeform-canvas"></div>
                 </div>
 
                 <div id="contentcustom" class="tab-content layout-container" role="tabpanel" aria-labelledby="tabcustom">
