@@ -9,44 +9,47 @@ No build step, no package manager, no server required. Open `index.html` directl
 ```bash
 # On Linux
 xdg-open index.html
-
-# Or just double-click index.html in a file manager
 ```
 
-The only external dependency is `html2canvas` loaded from a CDN in `index.html`. There are no tests.
+`html2canvas` is vendored locally as `html2canvas.min.js` — no CDN dependency. There are no tests.
+
+## Deployment
+
+Hosted on Netlify at `plattegrondgenerator.netlify.app`. Push to `main` on GitHub triggers an automatic redeploy. `netlify.toml` sets 1-year cache headers for JS/CSS/PNG assets and security headers (`X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`) for all routes.
 
 ## Architecture
 
-This is a pure client-side, single-page application written in Dutch. Three files:
-- `index.html` — page structure and HTML templates for dynamic elements
-- `style.css` — all styling using CSS custom properties for theming
-- `app.js` — all application logic (no frameworks, ES6+ Vanilla JS)
+Pure client-side single-page application written in Dutch. Four files of substance:
+- `index.html` — page structure and `<template>` elements for dynamic rows
+- `style.css` — all styling via CSS custom properties
+- `app.js` — all logic (ES6+ Vanilla JS, no frameworks)
+- `html2canvas.min.js` — vendored screenshot library
 
 ### Class Structure in `app.js`
 
-Six classes are instantiated in `DOMContentLoaded` and wired together by passing references:
+Six classes instantiated in `DOMContentLoaded` and wired together by reference:
 
 | Class | Responsibility |
 |---|---|
 | `State` | Central state + `localStorage` persistence |
 | `NotificationSystem` | Toast-style user feedback |
 | `SeatingGenerator` | Placement algorithm + DOM rendering of seat grids |
-| `TabManager` | Switching between the 4 layout tabs |
+| `TabManager` | Switching between the 4 layout tabs (lazy rendering) |
 | `ListManager` | Save/load/delete named class lists |
 | `EventHandlers` | Attaches all UI event listeners |
 
-**Important wiring quirk**: `ListManager.updateUI` is monkey-patched after construction (line 882) because it needs `EventHandlers.addFixedSeatInput` and `addSeparatedPairInput`, which create a circular dependency.
+**Wiring quirk**: `ListManager.updateUI` is monkey-patched after construction because it needs `EventHandlers.addFixedSeatInput` and `addSeparatedPairInput`, creating a circular dependency that's resolved post-instantiation.
 
 ### State Model
 
 All state persists to `localStorage` under the key `'classroomState'`. The `State` class holds:
 - `students: string[]` — ordered list of student names
-- `fixedSeats: Map<studentName, seatIndex>` — 0-indexed seat positions (UI shows 1-indexed)
-- `separatedPairs: [string, string][]` — pairs of students that must not be neighbors
+- `fixedSeats: Map<studentName, seatIndex>` — 0-indexed internally, 1-indexed in the UI
+- `separatedPairs: [string, string][]` — pairs that must not be neighbors
 - `layouts: { '222'|'232'|'33'|'custom': Array<{name:string}|null> }` — current seat arrangements
 - `savedLists: Map<listName, {students, fixedSeats, separatedPairs}>` — persisted class lists
 - `customLayoutConfig: { rows, groupSizes }` — configuration for the custom tab
-- `darkMode: boolean`, `colorTheme: string`, `activeTab: string`
+- `activeTab: string`
 
 ### Seating Algorithm (`SeatingGenerator`)
 
@@ -54,13 +57,20 @@ Layout types (`222`, `232`, `33`, `custom`) each define `{ groupSizes, rows, sea
 
 Generation flow:
 1. Place fixed-seat students first
-2. Fisher-Yates shuffle the remaining students into empty seats
-3. Check for separation violations using `getNeighbors()` — neighbors are only within the same visual group (not across the aisle gap between groups)
-4. Attempt to swap-fix violations, up to 500 total attempts
+2. Fisher-Yates shuffle remaining students into empty seats
+3. Check for separation violations via `getNeighbors()` — adjacency is group-aware (no cross-aisle neighbours)
+4. Swap-fix violations up to 500 attempts total
 5. Warn via notification if constraints cannot be fully satisfied
 
-`getNeighbors()` computes adjacency group-aware: left/right/diagonal neighbors only connect seats within the same `groupSizes` block in a row.
+`render(layoutType = null)` only renders the active tab. `TabManager` fires an `onTabChange` callback that calls `render(tabId)` when switching to a tab that has layout data, enabling lazy rendering.
 
-### Theming
+### Easter Egg
 
-CSS custom properties are set on `:root` and `[data-theme]` selectors. The `data-theme` attribute on `<html>` controls the color theme (`blue`/`red`/`green`/`yellow`). Dark mode adds the `dark-mode` class to `<body>`.
+`DEMO_NAMES` (module-level constant, top of `EventHandlers` section) holds 37 Dutch multicultural names. Clicking the logo 5 times within 1.5 seconds calls `loadDemoNames()`, which shuffles the list and loads 28 random names into the textarea — useful for quick testing.
+
+### CSS Notes
+
+- All colour tokens are CSS custom properties on `:root`. There is no theming system (dark mode and colour picker were removed).
+- Tab switching uses a `@keyframes fadeIn` animation on `.tab-content.active` — not a `transition`, because `display:none → block` cannot be transitioned.
+- The mobile breakpoint (768px) uses `:not(.remove-fixed):not(.remove-separated-pair)` to exempt small "X" buttons from the `width: 100%` rule that applies to all other buttons.
+- `backdrop-filter` is not used — all container backgrounds are opaque.
