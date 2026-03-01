@@ -19,10 +19,11 @@
                 <img src="logo.png" alt="Klasopstelling Generator Logo" class="logo">
                 <h1>Klasopstelling Generator</h1>
             </div>
+            <button id="helpBtn" class="help-btn" aria-label="Uitleg">?</button>
         </header>
 
         <main>
-<section class="form-group" id="studentInput">
+            <section class="form-group" id="studentInput">
                 <label for="studentNames">Voer de namen van de leerlingen in (één naam per regel):</label>
                 <textarea
                     id="studentNames"
@@ -36,25 +37,23 @@
             <div class="seating-rules">
                 <section class="fixed-seats-section">
                     <h2>Vaste plaatsen toewijzen</h2>
-                    <div id="fixedSeatsContainer">
-                        </div>
+                    <div id="fixedSeatsContainer"></div>
                     <button
                         id="addFixedSeatBtn"
                         class="button button-secondary"
                         aria-label="Voeg een nieuwe vaste plaats toe">
-                        Voeg vaste plaats toe
+                        📌 Vaste plaats toevoegen
                     </button>
                 </section>
 
                 <section class="separated-pairs-section">
                     <h2>Leerlingen scheiden</h2>
-                    <div id="separatedPairsContainer">
-                        </div>
+                    <div id="separatedPairsContainer"></div>
                     <button
                         id="addSeparatedPairBtn"
                         class="button button-secondary"
                         aria-label="Voeg een nieuw scheidingspaar toe">
-                        Voeg scheidingspaar toe
+                        ✂️ Scheidingspaar toevoegen
                     </button>
                 </section>
             </div>
@@ -64,26 +63,26 @@
                     id="generateBtn"
                     class="button button-primary"
                     aria-label="Genereer nieuwe klasopstellingen">
-                    Genereer Opstellingen
+                    🎲 Genereer Opstellingen
                 </button>
                 <button
                     id="saveBtn"
                     class="button button-secondary"
                     aria-label="Sla huidige configuratie op">
-                    Opslaan
+                    💾 Opslaan
                 </button>
                 <button
                     id="undoBtn"
                     class="button button-secondary"
                     aria-label="Maak laatste versleep ongedaan"
                     disabled>
-                    Ongedaan maken
+                    ↩️ Ongedaan maken
                 </button>
                 <button
                     id="screenshotBtn"
                     class="button button-secondary"
                     aria-label="Download plattegrond als afbeelding">
-                    Download Plattegrond
+                    📸 Download Plattegrond
                 </button>
             </section>
 
@@ -122,6 +121,7 @@
                         </li>
                     </ul>
                 </div>
+
                 <div id="content222" class="tab-content layout-container active" role="tabpanel" aria-labelledby="tab222">
                     <h3>2-2-2 Opstelling</h3>
                     <div id="seatingPlan222" class="seating-plan" aria-label="2-2-2 klasopstelling"></div>
@@ -140,8 +140,8 @@
                 <div id="contentfreeform" class="tab-content layout-container" role="tabpanel" aria-labelledby="tabfreeform">
                     <h3>Vrije Opstelling</h3>
                     <div class="freeform-toolbar">
-                        <button id="addFreeformGroupBtn" class="button button-secondary">+ Voeg tafel toe</button>
-                        <button id="generateFreeformBtn" class="button button-secondary">↺ Herverdeel leerlingen</button>
+                        <button id="addFreeformGroupBtn" class="button button-secondary">🪑 Voeg tafel toe</button>
+                        <button id="generateFreeformBtn" class="button button-secondary">🔀 Herverdeel leerlingen</button>
                         <div class="zoom-controls">
                             <button id="freeformZoomOut" class="button button-secondary zoom-btn" title="Uitzoomen">−</button>
                             <span id="freeformZoomLevel" class="zoom-label">100%</span>
@@ -164,12 +164,13 @@
                             <label for="customGroupSizes">Groepsindeling (bv. 2,3,2):</label>
                             <input type="text" id="customGroupSizes" placeholder="bv. 2,2,2" value="2,3,2">
                         </div>
-                        <button id="applyCustomLayoutBtn" class="button button-secondary">Pas Layout Toe</button>
+                        <button id="applyCustomLayoutBtn" class="button button-secondary">✅ Pas Layout Toe</button>
                     </div>
                     <div id="seatingPlancustom" class="seating-plan" aria-label="Custom klasopstelling"></div>
                 </div>
             </section>
-                      <section class="list-management collapsed">
+
+            <section class="list-management collapsed">
                 <div class="list-management-header">
                     <h2>📁 Lijstbeheer (optioneel)</h2>
                     <button class="collapse-toggle" aria-label="Toon/verberg lijstbeheer">
@@ -182,17 +183,17 @@
                             <option value="">-- Selecteer een lijst --</option>
                         </select>
                         <button id="loadListBtn" class="button button-secondary" disabled>
-                            Laad Lijst
+                            📂 Laad Lijst
                         </button>
                         <button id="deleteListBtn" class="button button-danger" disabled>
-                            Verwijder Lijst
+                            🗑️ Verwijder Lijst
                         </button>
                     </div>
                     <div class="save-list-form">
                         <input type="text" id="listName" placeholder="Geef deze lijst een naam"
                                aria-label="Naam voor nieuwe lijst">
                         <button id="saveListBtn" class="button button-primary">
-                            Sla Lijst Op
+                            💾 Sla Lijst Op
                         </button>
                     </div>
                 </div>
@@ -206,20 +207,60 @@
 
     <div id="notificationContainer" class="notification-container" role="alert" aria-live="polite"></div>
 
+    <!-- Help overlay -->
+    <div id="helpOverlay" class="help-overlay" role="dialog" aria-modal="true" aria-label="Uitleg">
+        <div class="help-panel">
+            <div class="help-header">
+                <h2>Hoe werkt het?</h2>
+                <button id="helpCloseBtn" class="help-close" aria-label="Sluit uitleg">✕</button>
+            </div>
+            <div class="help-body">
+                <div class="help-section">
+                    <h3>📝 Leerlingen invoeren</h3>
+                    <p>Voer één naam per regel in het tekstvak. Klik daarna op <strong>🎲 Genereer Opstellingen</strong> om een indeling te maken.</p>
+                </div>
+                <div class="help-section">
+                    <h3>📌 Vaste plaatsen</h3>
+                    <p>Koppel een leerling aan een plaatsnummer. Die leerling wordt altijd op die plek gezet, ongeacht de opstelling.</p>
+                </div>
+                <div class="help-section">
+                    <h3>✂️ Leerlingen scheiden</h3>
+                    <p>Voeg een paar toe van leerlingen die <em>niet</em> naast elkaar mogen zitten. De generator houdt hier rekening mee.</p>
+                </div>
+                <div class="help-section">
+                    <h3>🔀 Opstellingen wisselen</h3>
+                    <p>Sleep een leerling naar een andere stoel om te wisselen. Gebruik <strong>↩️ Ongedaan maken</strong> of <kbd>Ctrl+Z</kbd> om een versleep terug te draaien.</p>
+                </div>
+                <div class="help-section">
+                    <h3>🪑 Vrije Opstelling</h3>
+                    <p>Voeg zelf tafels toe en kies de vorm (horizontaal, verticaal of raster, max. 6 stoelen). Sleep tafels naar de gewenste plek. Gebruik <strong>− / +</strong> om in te zoomen.</p>
+                </div>
+                <div class="help-section">
+                    <h3>📸 Download Plattegrond</h3>
+                    <p>Downloadt de actieve opstelling als afbeelding. Bij de Vrije Opstelling wordt altijd de volledige indeling op ware grootte gedownload.</p>
+                </div>
+                <div class="help-section">
+                    <h3>📁 Lijstbeheer</h3>
+                    <p>Sla een namenlijst op (inclusief vaste plaatsen en scheidingsparen) om later opnieuw te laden.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <template id="fixedSeatTemplate">
         <div class="fixed-seat-input">
             <input type="text" placeholder="Naam leerling" class="fixed-name" required>
             <input type="number" min="1" placeholder="Plaats #" class="fixed-position" required>
-            <button class="button button-danger remove-fixed" aria-label="Verwijder deze vaste plaats">X</button>
+            <button class="button button-danger remove-fixed" aria-label="Verwijder deze vaste plaats">✕</button>
         </div>
     </template>
-    
+
     <template id="separatedPairTemplate">
         <div class="separated-pair-input">
             <input type="text" placeholder="Naam leerling 1" class="separated-name1" required>
             <span class="separator">&harr;</span>
             <input type="text" placeholder="Naam leerling 2" class="separated-name2" required>
-            <button class="button button-danger remove-separated-pair" aria-label="Verwijder dit scheidingspaar">X</button>
+            <button class="button button-danger remove-separated-pair" aria-label="Verwijder dit scheidingspaar">✕</button>
         </div>
     </template>
 

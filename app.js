@@ -995,6 +995,21 @@ class EventHandlers {
                 e.preventDefault();
                 this.seatingGenerator.undo();
             }
+            if (e.key === 'Escape') {
+                document.getElementById('helpOverlay').classList.remove('visible');
+            }
+        });
+
+        // Help overlay
+        const helpOverlay = document.getElementById('helpOverlay');
+        document.getElementById('helpBtn').addEventListener('click', () => {
+            helpOverlay.classList.add('visible');
+        });
+        document.getElementById('helpCloseBtn').addEventListener('click', () => {
+            helpOverlay.classList.remove('visible');
+        });
+        helpOverlay.addEventListener('click', (e) => {
+            if (e.target === helpOverlay) helpOverlay.classList.remove('visible');
         });
 
         // Freeform: add group button
