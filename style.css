@@ -87,6 +87,7 @@
         width: 48px;
         height: 48px;
         object-fit: contain;
+        cursor: pointer;
         transition: transform var(--transition-speed);
     }
 

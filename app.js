@@ -621,6 +621,25 @@ class TabManager {
     }
 }
 
+const DEMO_NAMES = [
+    // Nederlands
+    'Emma de Vries', 'Lotte Janssen', 'Daan van den Berg', 'Sanne Bakker',
+    'Bram Visser', 'Sophie Meijer', 'Tom de Boer', 'Noor Peters',
+    'Lars Smit', 'Julia van Dijk', 'Finn Hendriksen', 'Maud Willems',
+    // Marokkaans-Nederlands
+    'Mohammed El Amrani', 'Fatima Benali', 'Youssef Chakir', 'Nadia Bouazza',
+    'Rachid El Azzouzi', 'Samira El Idrissi', 'Hamza Belhaj', 'Zineb Lahlou',
+    // Turks-Nederlands
+    'Mehmet Yilmaz', 'Ayse Demir', 'Mustafa Kaya', 'Zeynep Celik',
+    'Ali Sahin', 'Merve Ozturk', 'Can Arslan', 'Elif Bulut',
+    // Surinaams-Nederlands
+    'Priya Ramdjan', 'Rishi Baldew', 'Shanaya Nannan', 'Jairzinho Martina',
+    // Indonesisch-Nederlands
+    'Dewi Santoso', 'Sari Kusuma', 'Indra Wijaya',
+    // Antilliaans-Nederlands
+    'Roshelly Cijntje', 'Charline Winklaar',
+];
+
 // EventHandlers class
 class EventHandlers {
     constructor(state, notifications, seatingGenerator, tabManager, listManager) {
@@ -633,6 +652,19 @@ class EventHandlers {
     }
 
     setupEventListeners() {
+        // Easter egg: 5 clicks on the logo loads a demo class list
+        let logoClickCount = 0;
+        let logoClickTimer = null;
+        document.querySelector('.logo').addEventListener('click', () => {
+            logoClickCount++;
+            clearTimeout(logoClickTimer);
+            logoClickTimer = setTimeout(() => { logoClickCount = 0; }, 1500);
+            if (logoClickCount >= 5) {
+                logoClickCount = 0;
+                this.loadDemoNames();
+            }
+        });
+
         // Generate Button
         document.getElementById('generateBtn').addEventListener('click', () => {
             this.generateSeating();
@@ -822,6 +854,16 @@ class EventHandlers {
     saveState() {
         this.state.saveToStorage();
         this.notifications.success('Configuratie opgeslagen');
+    }
+
+    loadDemoNames() {
+        const shuffled = [...DEMO_NAMES].sort(() => Math.random() - 0.5);
+        const names = shuffled.slice(0, 28);
+        document.getElementById('studentNames').value = names.join('\n');
+        this.state.students = names;
+        this.state.layouts = { '232': [], '222': [], '33': [], 'custom': [] };
+        this.state.saveToStorage();
+        this.notifications.success('Testlijst geladen');
     }
 
     debounce(func, wait) {
