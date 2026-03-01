@@ -14,10 +14,8 @@ class State {
             rows: 5,
             groupSizes: [2, 3, 2]
         };
-        this.darkMode = false;
         this.activeTab = '222';
         this.savedLists = new Map();
-        this.colorTheme = 'blue'; // Default color theme
     }
 
     saveToStorage() {
@@ -25,11 +23,9 @@ class State {
             students: this.students,
             fixedSeats: Array.from(this.fixedSeats.entries()),
             separatedPairs: this.separatedPairs,
-            darkMode: this.darkMode,
             activeTab: this.activeTab,
             layouts: this.layouts,
             savedLists: Array.from(this.savedLists.entries()),
-            colorTheme: this.colorTheme,
             customLayoutConfig: this.customLayoutConfig
         };
         localStorage.setItem('classroomState', JSON.stringify(data));
@@ -46,7 +42,6 @@ class State {
                 this.students = data.students || [];
                 this.fixedSeats = new Map(data.fixedSeats || []);
                 this.separatedPairs = data.separatedPairs || [];
-                this.darkMode = data.darkMode || false;
                 this.activeTab = data.activeTab || '222';
                 this.layouts = data.layouts || { '232': [], '222': [], '33': [], 'custom': [] };
                 if (Array.isArray(data.savedLists)) {
@@ -54,7 +49,6 @@ class State {
                 } else {
                     this.savedLists = new Map();
                 }
-                this.colorTheme = data.colorTheme || 'blue';
                 this.customLayoutConfig = data.customLayoutConfig || { rows: 5, groupSizes: [2, 3, 2] };
                 return true;
             }
@@ -535,10 +529,12 @@ class SeatingGenerator {
         return rowDiv;
     }
 
-    render() {
+    render(layoutType = null) {
         const layoutConfigs = this._getLayoutConfigs();
+        const typesToRender = layoutType ? [layoutType] : [this.state.activeTab];
 
-        Object.keys(layoutConfigs).forEach(layout => {
+        typesToRender.forEach(layout => {
+            if (!layoutConfigs[layout]) return;
             const seating = this.generateLayout(layout);
             const plan = document.getElementById(`seatingPlan${layout}`);
             if (!plan) return;
@@ -582,8 +578,9 @@ class SeatingGenerator {
 }
 // TabManager class
 class TabManager {
-    constructor(state) {
+    constructor(state, onTabChange = null) {
         this.state = state;
+        this.onTabChange = onTabChange;
         this.setupTabs();
     }
 
@@ -608,6 +605,7 @@ class TabManager {
 
                 this.state.activeTab = tab.id.replace('tab', '');
                 this.state.saveToStorage();
+                if (this.onTabChange) this.onTabChange(this.state.activeTab);
             });
         });
     }
@@ -635,11 +633,6 @@ class EventHandlers {
     }
 
     setupEventListeners() {
-        // Dark Mode Toggle
-        document.getElementById('darkModeToggle').addEventListener('click', () => {
-            this.toggleDarkMode();
-        });
-
         // Generate Button
         document.getElementById('generateBtn').addEventListener('click', () => {
             this.generateSeating();
@@ -703,40 +696,10 @@ class EventHandlers {
             this.debounce(() => this.updateStudents(), 500)
         );
 
-        // Color theme change handler
-        const colorButtons = document.querySelectorAll('.color-button');
-        colorButtons.forEach(button => {
-            button.addEventListener('click', () => {
-                const theme = button.dataset.theme;
-                this.state.colorTheme = theme;
-                document.documentElement.setAttribute('data-theme', theme);
-
-                // Update active state of buttons
-                colorButtons.forEach(btn => btn.classList.remove('active'));
-                button.classList.add('active');
-
-                this.state.saveToStorage();
-                this.notifications.success(`Thema kleur gewijzigd naar ${theme}`);
-            });
-        });
-
         // Custom layout controls
         document.getElementById('applyCustomLayoutBtn').addEventListener('click', () => {
             this.applyCustomLayout();
         });
-
-        // Initialize color theme
-        const activeButton = document.querySelector(`.color-button[data-theme="${this.state.colorTheme}"]`);
-        if (activeButton) {
-            activeButton.classList.add('active');
-        }
-        document.documentElement.setAttribute('data-theme', this.state.colorTheme);
-    }
-
-    toggleDarkMode() {
-        document.body.classList.toggle('dark-mode');
-        this.state.darkMode = document.body.classList.contains('dark-mode');
-        this.state.saveToStorage();
     }
 
     updateStudents() {
@@ -786,7 +749,7 @@ class EventHandlers {
         document.querySelectorAll('.fixed-seat-input').forEach(input => {
             const name = input.querySelector('.fixed-name').value.trim();
             const position = parseInt(input.querySelector('.fixed-position').value);
-            if (name && position && position >= 1 && position <= 40) {
+            if (name && position && position >= 1) {
                 this.state.fixedSeats.set(name, position - 1);
             }
         });
@@ -876,7 +839,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const notifications = new NotificationSystem();
     window.notifications = notifications; // Make notifications globally available
     const seatingGenerator = new SeatingGenerator(state, notifications);
-    const tabManager = new TabManager(state);
+    const tabManager = new TabManager(state, (activeTab) => {
+        if (state.layouts[activeTab] && state.layouts[activeTab].length > 0) {
+            seatingGenerator.render(activeTab);
+        }
+    });
     const listManager = new ListManager(state, notifications);
     const eventHandlers = new EventHandlers(state, notifications, seatingGenerator, tabManager, listManager);
     listManager.updateUI = function () {
@@ -905,10 +872,6 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('studentNames').value = state.students.join('\n');
         document.getElementById('customRows').value = state.customLayoutConfig.rows;
         document.getElementById('customGroupSizes').value = state.customLayoutConfig.groupSizes.join(',');
-
-        if (state.darkMode) {
-            document.body.classList.add('dark-mode');
-        }
 
         listManager.updateUI();
 

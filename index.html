@@ -4,8 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Klasopstelling Generator</title>
+  <meta name="description" content="Maak snel en eenvoudig klasopstellingen. Genereer willekeurige indelingen, stel vaste plaatsen in en scheid leerlingen met drag & drop.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🪑</text></svg>">
   <link rel="stylesheet" href="style.css">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="html2canvas.min.js"></script>
 </head>
 <body>
     <div class="container">
@@ -13,14 +15,6 @@
             <div class="header-content">
                 <img src="logo.png" alt="Klasopstelling Generator Logo" class="logo">
                 <h1>Klasopstelling Generator</h1>
-            </div>
-            <div class="theme-controls">
-                <div class="color-picker">
-                    <button class="color-button blue active" data-theme="blue" aria-label="Blauw thema"></button>
-                    <button class="color-button red" data-theme="red" aria-label="Rood thema"></button>
-                    <button class="color-button green" data-theme="green" aria-label="Groen thema"></button>
-                    <button class="color-button yellow" data-theme="yellow" aria-label="Geel thema"></button>
-                </div>
             </div>
         </header>
 
@@ -178,16 +172,12 @@
         </footer>
     </div>
 
-    <button id="darkModeToggle" class="theme-toggle" aria-label="Schakel tussen licht en donker thema">
-        🌓
-    </button>
-
     <div id="notificationContainer" class="notification-container" role="alert" aria-live="polite"></div>
 
     <template id="fixedSeatTemplate">
         <div class="fixed-seat-input">
             <input type="text" placeholder="Naam leerling" class="fixed-name" required>
-            <input type="number" min="1" max="40" placeholder="Plaats #" class="fixed-position" required>
+            <input type="number" min="1" placeholder="Plaats #" class="fixed-position" required>
             <button class="button button-danger remove-fixed" aria-label="Verwijder deze vaste plaats">X</button>
         </div>
     </template>
