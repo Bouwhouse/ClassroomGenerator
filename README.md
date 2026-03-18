@@ -97,7 +97,7 @@ Ideeën voor toekomstige versies, van meest tot minst prioriteit:
 - [ ] **Afdrukweergave** — een schermvullende, knopvrije weergave speciaal voor printen of projecteren op een digibord, ook handig voor een invaller.
 
 ### Handige toevoegingen
-- [ ] **Autocomplete bij vaste plaatsen en scheidingsparen** — namen worden automatisch aangevuld vanuit de ingevoerde leerlingenlijst.
+- [x] **Autocomplete bij vaste plaatsen en scheidingsparen** — namen worden automatisch aangevuld vanuit de ingevoerde leerlingenlijst.
 - [ ] **Toetsenbordsnelkoppeling om opnieuw te genereren** — bijvoorbeeld `Ctrl+G`, zodat je niet steeds naar de knop hoeft.
 - [ ] **Lege/geblokkeerde stoel** — markeer een stoel als niet beschikbaar (bv. kapotte stoel of een plek die vrij moet blijven).
 

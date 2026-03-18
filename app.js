@@ -254,9 +254,10 @@ class ListManager {
         }
     }
 
-    setUICallbacks(addFixedSeatInput, addSeparatedPairInput) {
+    setUICallbacks(addFixedSeatInput, addSeparatedPairInput, updateStudentDatalist) {
         this._addFixedSeatInput = addFixedSeatInput;
         this._addSeparatedPairInput = addSeparatedPairInput;
+        this._updateStudentDatalist = updateStudentDatalist;
     }
 
     updateUI() {
@@ -273,6 +274,8 @@ class ListManager {
         this.state.separatedPairs.forEach(pair => {
             this._addSeparatedPairInput(pair[0], pair[1]);
         });
+
+        this._updateStudentDatalist();
     }
 }
 
@@ -1086,6 +1089,17 @@ class EventHandlers {
 
         this.state.students = studentNames;
         this.state.saveToStorage();
+        this.updateStudentDatalist();
+    }
+
+    updateStudentDatalist() {
+        const datalist = document.getElementById('studentNamesList');
+        datalist.innerHTML = '';
+        this.state.students.forEach(name => {
+            const option = document.createElement('option');
+            option.value = name;
+            datalist.appendChild(option);
+        });
     }
 
     addFixedSeatInput(name = '', position = '') {
@@ -1197,6 +1211,7 @@ class EventHandlers {
         this.state.students = names;
         this.state.layouts = { '232': [], '222': [], '33': [], 'custom': [], 'freeform': [] };
         this.state.saveToStorage();
+        this.updateStudentDatalist();
         this.notifications.success('Testlijst geladen');
     }
 
@@ -1226,7 +1241,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const eventHandlers = new EventHandlers(state, notifications, seatingGenerator, tabManager, listManager);
     listManager.setUICallbacks(
         (name, pos) => eventHandlers.addFixedSeatInput(name, pos),
-        (name1, name2) => eventHandlers.addSeparatedPairInput(name1, name2)
+        (name1, name2) => eventHandlers.addSeparatedPairInput(name1, name2),
+        () => eventHandlers.updateStudentDatalist()
     );
 
     // Load saved state

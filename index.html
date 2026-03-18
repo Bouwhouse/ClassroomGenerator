@@ -247,9 +247,11 @@
         </div>
     </div>
 
+    <datalist id="studentNamesList"></datalist>
+
     <template id="fixedSeatTemplate">
         <div class="fixed-seat-input">
-            <input type="text" placeholder="Naam leerling" class="fixed-name" required>
+            <input type="text" placeholder="Naam leerling" class="fixed-name" list="studentNamesList" required>
             <input type="number" min="1" placeholder="Plaats #" class="fixed-position" required>
             <button class="button button-danger remove-fixed" aria-label="Verwijder deze vaste plaats">✕</button>
         </div>
@@ -257,9 +259,9 @@
 
     <template id="separatedPairTemplate">
         <div class="separated-pair-input">
-            <input type="text" placeholder="Naam leerling 1" class="separated-name1" required>
+            <input type="text" placeholder="Naam leerling 1" class="separated-name1" list="studentNamesList" required>
             <span class="separator">&harr;</span>
-            <input type="text" placeholder="Naam leerling 2" class="separated-name2" required>
+            <input type="text" placeholder="Naam leerling 2" class="separated-name2" list="studentNamesList" required>
             <button class="button button-danger remove-separated-pair" aria-label="Verwijder dit scheidingspaar">✕</button>
         </div>
     </template>
