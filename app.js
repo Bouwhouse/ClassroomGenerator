@@ -254,22 +254,24 @@ class ListManager {
         }
     }
 
+    setUICallbacks(addFixedSeatInput, addSeparatedPairInput) {
+        this._addFixedSeatInput = addFixedSeatInput;
+        this._addSeparatedPairInput = addSeparatedPairInput;
+    }
+
     updateUI() {
-        // Update student names textarea
         document.getElementById('studentNames').value = this.state.students.join('\n');
 
-        // Update fixed seats
         const fixedContainer = document.getElementById('fixedSeatsContainer');
         fixedContainer.innerHTML = '';
         this.state.fixedSeats.forEach((seatNumber, studentName) => {
-            this.addFixedSeatInput(studentName, seatNumber + 1);
+            this._addFixedSeatInput(studentName, seatNumber + 1);
         });
 
-        // Update separated pairs
         const separatedContainer = document.getElementById('separatedPairsContainer');
         separatedContainer.innerHTML = '';
         this.state.separatedPairs.forEach(pair => {
-            this.addSeparatedPairInput(pair[0], pair[1]);
+            this._addSeparatedPairInput(pair[0], pair[1]);
         });
     }
 }
@@ -1222,21 +1224,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     const listManager = new ListManager(state, notifications);
     const eventHandlers = new EventHandlers(state, notifications, seatingGenerator, tabManager, listManager);
-    listManager.updateUI = function () {
-        document.getElementById('studentNames').value = state.students.join('\n');
-
-        const fixedContainer = document.getElementById('fixedSeatsContainer');
-        fixedContainer.innerHTML = '';
-        state.fixedSeats.forEach((seatNumber, studentName) => {
-            eventHandlers.addFixedSeatInput(studentName, seatNumber + 1);
-        });
-
-        const separatedContainer = document.getElementById('separatedPairsContainer');
-        separatedContainer.innerHTML = '';
-        state.separatedPairs.forEach(pair => {
-            eventHandlers.addSeparatedPairInput(pair[0], pair[1]);
-        });
-    };
+    listManager.setUICallbacks(
+        (name, pos) => eventHandlers.addFixedSeatInput(name, pos),
+        (name1, name2) => eventHandlers.addSeparatedPairInput(name1, name2)
+    );
 
     // Load saved state
     state.loadFromStorage(); // Always try to load, even if no previous state exists
