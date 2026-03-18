@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git -C \"c:\\\\Users\\\\554362\\\\Downloads\\\\Classroom Generator\\\\ClassroomGenerator\" add app.js index.html README.md)",
+      "Bash(git -C:*)"
+    ]
+  }
+}
